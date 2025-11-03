@@ -2,8 +2,7 @@ const domainService = require('../services/domainService');
 const Product = require('../models/product');
 const Promo = require('../models/promo');
 const Setting = require('../models/setting');
-const os = require('os');
-
+const axios = require('axios'); 
 exports.getHomePage = async (req, res) => {
     try {
         const products = await Product.find({ isFeatured: true });
@@ -12,7 +11,7 @@ exports.getHomePage = async (req, res) => {
             user: req.session.user, 
             products,
             promo,
-            title: 'domain, hosting, & ssl murah',
+            title: 'Domain, Hosting, & SSL Murah',
             description: 'DigitalHostID adalah penyedia layanan daftar domain, hosting cepat, dan sertifikat ssl terpercaya di Indonesia untuk semua kebutuhan online Anda.',
             keywords: 'domain, hosting, ssl, web hosting, domain murah, hosting indonesia',
             canonicalUrl: process.env.APP_BASE_URL + '/'
@@ -104,43 +103,15 @@ exports.getSslPage = async (req, res) => {
     }
 };
 
-exports.checkIp = (req, res) => {
-    const networkInterfaces = os.networkInterfaces();
-    const ips = {};
-    for (const name of Object.keys(networkInterfaces)) {
-        for (const net of networkInterfaces[name]) {
-            if (net.family === 'IPv4' && !net.internal) {
-                if (!ips[name]) {
-                    ips[name] = [];
-                }
-                ips[name].push(net.address);
-            }
-        }
+// **FUNGSI BARU ANDA YANG SUDAH DIIMPLEMENTASIKAN**
+exports.checkServerIp = async (req, res) => {
+    try {
+        const response = await axios.get('https://api.ipify.org?format=json');
+        res.status(200).json({
+            message: "This is your server's IP Address. Add this IP to your API provider's whitelist.",
+            ipAddress: response.data.ip
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to get server IP.", details: error.message });
     }
-    res.json({ local_ips: ips });
-};
-
-exports.getRobotsTxt = (req, res) => {
-    res.type('text/plain');
-    const content = `User-agent: *
-Allow: /
-Disallow: /admin
-Disallow: /support
-Disallow: /dashboard
-
-Sitemap: ${process.env.APP_BASE_URL}/sitemap.xml`;
-    res.send(content);
-};
-
-exports.getSitemapXml = async (req, res) => {
-    res.type('application/xml');
-    let xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-    
-    const staticPages = ['/', '/ssl', '/login', '/register'];
-    staticPages.forEach(page => {
-        xml += `<url><loc>${process.env.APP_BASE_URL}${page}</loc><lastmod>${new Date().toISOString().split('T')[0]}</lastmod><priority>0.8</priority></url>`;
-    });
-
-    xml += '</urlset>';
-    res.send(xml);
 };
