@@ -1,0 +1,50 @@
+<%- include('../partials/header', { title: 'Layanan Saya' }) %>
+
+<style>
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--nexus-border-color); }
+    table th { font-weight: 600; background-color: #f9fafb; }
+    .status-active { color: var(--nexus-success); font-weight: bold; }
+    .status-suspended, .status-terminated { color: var(--nexus-danger); font-weight: bold; }
+    .status-pending { color: var(--nexus-warning); }
+</style>
+
+<h1><i class="fas fa-box-open"></i> Layanan Saya</h1>
+<p>Kelola semua produk dan layanan yang Anda miliki selain domain.</p>
+
+<div class="card">
+    <h2>Daftar Layanan Aktif</h2>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama Produk</th>
+                    <th>Harga</th>
+                    <th>Tanggal Jatuh Tempo</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (services && services.length > 0) { %>
+                    <% services.forEach(service => { %>
+                        <tr>
+                            <td><strong><%= service.productName %></strong></td>
+                            <td>Rp <%= service.price.toLocaleString('id-ID') %>/<%= service.billingCycle === 'monthly' ? 'Bulan' : 'Tahun' %></td>
+                            <td><%= new Date(service.nextDueDate).toLocaleDateString('id-ID') %></td>
+                            <td><span class="status-<%= service.status.toLowerCase() %>"><%= service.status %></span></td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 20px;">
+                            Anda belum memiliki layanan hosting atau produk lainnya.
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

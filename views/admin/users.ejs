@@ -1,0 +1,49 @@
+<%- include('../partials/header', { title: 'Manajemen Pengguna' }) %>
+
+<h1><i class="fas fa-users-cog"></i> Manajemen Pengguna</h1>
+<p>Kelola semua pengguna yang terdaftar di sistem.</p>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (users && users.length > 0) { %>
+                    <% users.forEach(u => { %>
+                        <tr>
+                            <td><%= u.name %></td>
+                            <td><%= u.email %></td>
+                            <td>
+                                <% if (u.email === user.email) { %>
+                                    <span class="btn btn-sm" style="background: #ccc; pointer-events: none;"><%= u.role %></span>
+                                <% } else { %>
+                                    <form action="/admin/users/<%= u._id %>/update-role" method="POST">
+                                        <select name="role" onchange="this.form.submit()" class="form-control" style="width: auto; padding: 8px 12px;">
+                                            <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>User</option>
+                                            <option value="support" <%= u.role === 'support' ? 'selected' : '' %>>Support</option>
+                                            <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                                        </select>
+                                    </form>
+                                <% } %>
+                            </td>
+                            <td>
+                                <a href="#" class="btn btn-secondary btn-sm disabled" title="Coming soon">Edit</a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr><td colspan="4" style="text-align: center; padding: 20px;">Tidak ada pengguna yang ditemukan.</td></tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+<style>.btn.disabled { pointer-events: none; background: #ccc; }</style>
+<%- include('../partials/footer') %>

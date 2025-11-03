@@ -1,0 +1,47 @@
+<%- include('../partials/header', { title: title }) %>
+
+<h1>Konfirmasi Pesanan SSL</h1>
+<p>Harap periksa kembali detail pesanan Anda sebelum menyelesaikan proses.</p>
+
+<div class="grid-2">
+    <div class="card">
+        <h3>Detail Produk</h3>
+        <p><strong>Produk:</strong> <%= product.name %></p>
+        <p><strong>Brand:</strong> <%= product.brand %></p>
+        <p><strong>Domain:</strong> <%= csr.name %></p>
+        <p><strong>Harga:</strong> Rp <%= (product.price).toLocaleString('id-ID') %>/Tahun</p>
+    </div>
+    <div class="card">
+        <h3>Kontak Administratif & Teknis</h3>
+        <p>Informasi di bawah diambil dari profil Anda.</p>
+        <p><strong>Nama:</strong> <%= user.name %></p>
+        <p><strong>Email:</strong> <%= user.email %></p>
+        <p><strong>Telepon:</strong> <%= user.voice %></p>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Konfigurasi & Validasi</h3>
+    <form action="/ssl/order/<%= product.id %>/confirm" method="POST">
+        <input type="hidden" name="csr_code" value="<%= csr.csr %>">
+        
+        <div class="form-group">
+            <label for="dcv_method">Metode Validasi Domain (DCV)</label>
+            <select name="dcv_method" id="dcv_method" class="form-control" required>
+                <option value="http">HTTP (Upload File)</option>
+                <option value="dns">DNS (CNAME Record)</option>
+                <option value="email">Email</option>
+            </select>
+            <small>Pastikan Anda memiliki akses ke salah satu metode di atas untuk domain <%= csr.name %>.</small>
+        </div>
+
+        <div class="form-group">
+            <label>Certificate Signing Request (CSR)</label>
+            <textarea class="form-control" rows="5" readonly><%= csr.csr %></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Selesaikan Pesanan</button>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>

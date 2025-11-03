@@ -1,0 +1,125 @@
+<%- include('partials/header', { title: title }) %>
+
+<script type="text/javascript" src="https://app.midtrans.com/snap/snap.js" data-client-key="<%= clientKey %>"></script>
+
+<style>
+    .stepper { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 50px; }
+    .stepper button { background: #f9f9f9; border: none; padding: 10px 20px; cursor: pointer; font-size: 1.2rem; }
+    .stepper input { width: 60px; text-align: center; border: none; font-size: 1.1rem; font-weight: 600; background: transparent; }
+    .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--nexus-primary); }
+    input:checked + .slider:before { transform: translateX(26px); }
+    .price-summary { border-left: 3px solid var(--nexus-primary); padding-left: 15px; margin-top: 1.5rem; }
+    .detail-item { display: flex; justify-content: space-between; padding: 8px 0; }
+    .voucher-form { display: flex; gap: 10px; margin-top: 1.5rem; }
+    .discount-row { color: var(--nexus-success); font-weight: bold; }
+</style>
+
+<div class="card" style="max-width: 600px; margin: 2rem auto;">
+    <h2><i class="fas fa-shopping-cart"></i> Ringkasan Pesanan</h2>
+    
+    <% if (cart.type === 'domain') { %>
+        <p>Anda akan mendaftarkan domain: <strong><%= cart.item.domain %></strong></p>
+        <form id="options-form" action="/update-cart-options" method="POST">
+            <div style="margin-top: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h4>Periode Registrasi</h4>
+                    <div class="stepper">
+                        <button type="button" onclick="changePeriod(-1)">-</button>
+                        <input type="text" name="period" value="<%= cart.options.period %>" min="1" max="5" readonly>
+                        <button type="button" onclick="changePeriod(1)">+</button>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h4>Proteksi WHOIS</h4>
+                    <label class="switch">
+                        <input type="checkbox" name="buy_whois_protection" <%= cart.options.buy_whois_protection ? 'checked' : '' %> onchange="document.getElementById('options-form').submit()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </form>
+    <% } else { %>
+        <p>Anda memesan produk: <strong><%= cart.item.name %></strong></p>
+    <% } %>
+    
+    <hr style="margin: 2rem 0;">
+    
+    <!-- #### BAGIAN YANG DIPERBAIKI TOTAL #### -->
+    <div class="price-summary">
+        <div class="detail-item">
+            <span>Subtotal</span>
+            <strong>Rp <%= cart.pricing.subtotal.toLocaleString('id-ID') %></strong>
+        </div>
+
+        <% if (cart.discount && cart.discount.amount) { %>
+            <div class="detail-item discount-row">
+                <span>Diskon (<%= cart.discount.code %>)</span>
+                <strong>- Rp <%= cart.discount.amount.toLocaleString('id-ID') %></strong>
+            </div>
+        <% } %>
+
+        <hr>
+        <div class="detail-item" style="font-size: 1.2rem;">
+            <strong>Total Bayar</strong>
+            <strong>Rp <%= cart.pricing.finalPrice.toLocaleString('id-ID') %></strong>
+        </div>
+    </div>
+    <!-- #### AKHIR BAGIAN YANG DIPERBAIKI #### -->
+    
+    <% if (cart.discount && cart.discount.code) { %>
+        <div style="text-align: right; margin-top: 1rem;">
+            <a href="/remove-voucher">Hapus Voucher</a>
+        </div>
+    <% } else { %>
+        <form action="/apply-voucher" method="POST" class="voucher-form">
+            <input type="text" name="code" class="form-control" placeholder="Masukkan Kode Voucher" required style="text-transform: uppercase;">
+            <button type="submit" class="btn btn-secondary" style="white-space: nowrap;">Terapkan</button>
+        </form>
+    <% } %>
+
+    <button id="pay-button" class="btn btn-primary" style="width: 100%; margin-top: 2rem; padding: 15px; font-size: 1.1rem;">
+        Bayar Sekarang
+    </button>
+</div>
+
+<script>
+    function changePeriod(amount) {
+        const input = document.querySelector('input[name="period"]');
+        let value = parseInt(input.value) + amount;
+        if (value >= 1 && value <= 5) {
+            input.value = value;
+            document.getElementById('options-form').submit();
+        }
+    }
+
+    const payButton = document.getElementById('pay-button');
+    payButton.onclick = async function() {
+        payButton.disabled = true;
+        payButton.innerHTML = '<div class="spinner" style="border-left-color: white; width: 20px; height: 20px; margin: 0 auto;"></div>';
+        try {
+            const response = await fetch('/process-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+            const data = await response.json();
+            if (data.token) {
+                snap.pay(data.token, {
+                    onSuccess: function(result){ window.location.href = '/dashboard?payment=success'; },
+                    onPending: function(result){ window.location.href = '/dashboard?payment=pending'; },
+                    onError: function(result){ window.location.href = '/dashboard?payment=error'; },
+                    onClose: function(){
+                        payButton.disabled = false;
+                        payButton.innerHTML = 'Bayar Sekarang';
+                    }
+                });
+            } else { throw new Error(data.error || 'Gagal mendapatkan token pembayaran.'); }
+        } catch (error) {
+            alert('Terjadi kesalahan: ' + error.message);
+            payButton.disabled = false;
+            payButton.innerHTML = 'Bayar Sekarang';
+        }
+    };
+</script>
+
+<%- include('partials/footer') %>

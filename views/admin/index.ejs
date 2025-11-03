@@ -1,0 +1,37 @@
+<%- include('../partials/header', { title: title || 'Admin Dashboard' }) %>
+
+<h1>Admin Dashboard</h1>
+<p>Selamat datang, <%= user.name %>. Di sini Anda dapat mengelola aspek penting dari situs Anda.</p>
+
+<div class="grid-2" style="margin-top: 2rem;">
+    <div class="card" style="display: flex; align-items: center; gap: 1.5rem;">
+        <i class="fas fa-users" style="font-size: 2.5rem; color: var(--nexus-primary);"></i>
+        <div>
+            <h3 style="font-size: 2rem; margin: 0;"><%= typeof userCount !== 'undefined' ? userCount : '0' %></h3>
+            <p style="margin: 0; color: var(--nexus-text-gray);">Total Pengguna</p>
+        </div>
+    </div>
+    <div class="card" style="display: flex; align-items: center; gap: 1.5rem;">
+        <i class="fas fa-globe" style="font-size: 2.5rem; color: var(--nexus-primary);"></i>
+        <div>
+            <h3 style="font-size: 2rem; margin: 0;"><%= typeof domainCount !== 'undefined' ? domainCount : '0' %></h3>
+            <p style="margin: 0; color: var(--nexus-text-gray);">Total Domain</p>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <h2>Tindakan Cepat</h2>
+    <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
+        <a href="/admin/users" class="btn btn-primary">Kelola Pengguna</a>
+        <a href="/admin/domains" class="btn btn-primary">Kelola Domain</a>
+        <a href="/admin/tickets" class="btn btn-secondary">Kelola Tiket</a>
+        <a href="/admin/vouchers" class="btn btn-secondary">Kelola Voucher</a>
+        <a href="/admin/promos" class="btn btn-secondary">Kelola Promo</a>
+        <a href="/admin/notifications" class="btn btn-secondary">Kirim Notifikasi</a>
+        <a href="/admin/products" class="btn btn-secondary">Kelola Produk</a>
+        <a href="/admin/settings-harga" class="btn btn-secondary">Pengaturan Harga</a>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

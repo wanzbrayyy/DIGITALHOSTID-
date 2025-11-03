@@ -1,0 +1,143 @@
+<%- include('../partials/header', { title: 'Konfirmasi Pesanan Domain' }) %>
+
+<script type="text/javascript" src="https://app.midtrans.com/snap/snap.js" data-client-key="<%= clientKey %>"></script>
+
+<style>
+    .stepper { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 50px; }
+    .stepper button { background: #f9f9f9; border: none; padding: 10px 20px; cursor: pointer; font-size: 1.2rem; }
+    .stepper input { width: 60px; text-align: center; border: none; font-size: 1.1rem; font-weight: 600; background: transparent; }
+    .stepper input:focus { outline: none; }
+    .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--nexus-primary); }
+    input:checked + .slider:before { transform: translateX(26px); }
+    .price-summary { border-left: 3px solid var(--nexus-primary); padding-left: 15px; margin-top: 1.5rem; }
+    .detail-item { display: flex; justify-content: space-between; padding: 8px 0; }
+</style>
+
+<div class="card" style="max-width: 600px; margin: 2rem auto;">
+    <h2><i class="fas fa-check-circle"></i> Konfirmasi Pesanan</h2>
+    <p>Satu langkah lagi untuk memiliki domain <strong style="font-size: 1.2rem; color: var(--nexus-primary-dark);"><%= order.domain %></strong></p>
+    
+    <div style="margin-top: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div>
+                <h4 style="margin: 0 0 5px 0;">Periode Registrasi</h4>
+                <small>Pilih durasi registrasi domain.</small>
+            </div>
+            <div class="stepper">
+                <button id="period-minus" type="button">-</button>
+                <input type="number" id="period" value="1" min="1" max="5" readonly>
+                <button id="period-plus" type="button">+</button>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h4 style="margin: 0 0 5px 0;">Proteksi WHOIS</h4>
+                <small>Sembunyikan info pribadi Anda.</small>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="whois_protection">
+                <span class="slider"></span>
+            </label>
+        </div>
+        
+        <div class="price-summary">
+            <div class="detail-item">
+                <span>Domain (<span id="period-text">1 Tahun</span>)</span>
+                <strong>Rp <span id="domain-price"><%= order.price.toLocaleString('id-ID') %></span></strong>
+            </div>
+            <div class="detail-item" id="whois-row" style="display: none;">
+                <span>Proteksi WHOIS</span>
+                <strong>Rp <span id="whois-price"><%= whoisPrice.toLocaleString('id-ID') %></span></strong>
+            </div>
+            <hr>
+            <div class="detail-item" style="font-size: 1.2rem;">
+                <strong>Total Bayar</strong>
+                <strong>Rp <span id="total-price"><%= order.price.toLocaleString('id-ID') %></span></strong>
+            </div>
+        </div>
+    </div>
+    
+    <button id="pay-button" class="btn btn-primary" style="width: 100%; margin-top: 2rem; padding: 15px; font-size: 1.1rem;">
+        <i class="fas fa-shield-alt"></i> Lanjutkan ke Pembayaran
+    </button>
+</div>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', () => {
+        const basePrice = <%= order.price %>;
+        const whoisPrice = <%= whoisPrice %>;
+
+        const periodInput = document.getElementById('period');
+        const whoisToggle = document.getElementById('whois_protection');
+        const payButton = document.getElementById('pay-button');
+
+        function updatePrice() {
+            const period = parseInt(periodInput.value);
+            const hasWhois = whoisToggle.checked;
+
+            const currentDomainPrice = basePrice * period;
+            const currentWhoisPrice = hasWhois ? whoisPrice : 0;
+            const totalPrice = currentDomainPrice + currentWhoisPrice;
+
+            document.getElementById('period-text').textContent = `${period} Tahun`;
+            document.getElementById('domain-price').textContent = currentDomainPrice.toLocaleString('id-ID');
+            document.getElementById('whois-row').style.display = hasWhois ? 'flex' : 'none';
+            document.getElementById('total-price').textContent = totalPrice.toLocaleString('id-ID');
+        }
+
+        document.getElementById('period-plus').addEventListener('click', () => {
+            let currentValue = parseInt(periodInput.value);
+            if (currentValue < 5) periodInput.value = currentValue + 1;
+            updatePrice();
+        });
+
+        document.getElementById('period-minus').addEventListener('click', () => {
+            let currentValue = parseInt(periodInput.value);
+            if (currentValue > 1) periodInput.value = currentValue - 1;
+            updatePrice();
+        });
+
+        whoisToggle.addEventListener('change', updatePrice);
+
+        payButton.onclick = async function() {
+            payButton.disabled = true;
+            payButton.innerHTML = '<div class="spinner" style="border-left-color: white; width: 20px; height: 20px; margin: 0 auto;"></div>';
+
+            try {
+                const response = await fetch('/process-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}) // Data sudah ada di sesi
+                });
+
+                const data = await response.json();
+                if (data.token) {
+                    snap.pay(data.token, {
+                        onSuccess: function(result){
+                            window.location.href = '/dashboard?payment=success';
+                        },
+                        onPending: function(result){
+                           window.location.href = '/dashboard?payment=pending';
+                        },
+                        onError: function(result){
+                           window.location.href = '/dashboard?payment=error';
+                        },
+                    });
+                } else { throw new Error(data.error || 'Gagal mendapatkan token.'); }
+            } catch (error) { 
+                alert('Terjadi kesalahan: ' + error.message); 
+                payButton.disabled = false;
+                payButton.innerHTML = '<i class="fas fa-shield-alt"></i> Lanjutkan ke Pembayaran';
+            }
+        };
+
+        updatePrice();
+    });
+</script>
+
+<%- include('../partials/footer') %>

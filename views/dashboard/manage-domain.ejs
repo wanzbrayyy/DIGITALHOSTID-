@@ -1,0 +1,84 @@
+<%- include('../partials/header', { title: 'Kelola Domain' }) %>
+
+<style>
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        color: white;
+    }
+    .locked { background-color: var(--nexus-success); }
+    .unlocked { background-color: var(--nexus-warning); }
+</style>
+
+<h1>Kelola Domain: <span style="color: var(--nexus-primary-dark);"><%= domain.name %></span></h1>
+
+<div class="grid-2">
+    <div class="card">
+        <h3><i class="fas fa-info-circle"></i> Detail Domain</h3>
+        <div class="detail-item"><span>Status</span> <strong><%= domain.status_desc %></strong></div>
+        <div class="detail-item"><span>Dibuat</span> <strong><%= new Date(domain.created_at).toLocaleDateString('id-ID') %></strong></div>
+        <div class="detail-item"><span>Kedaluwarsa</span> <strong><%= new Date(domain.expiry_date).toLocaleDateString('id-ID') %></strong></div>
+    </div>
+
+    <div class="card">
+        <h3><i class="fas fa-server"></i> Nameserver</h3>
+        <% if (domain.nameservers && domain.nameservers.length > 0) { %>
+            <% domain.nameservers.forEach(ns => { %>
+                <div style="padding: 8px 0;"><%= ns.host %></div>
+            <% }) %>
+        <% } else { %>
+            <p>Nameserver belum diatur.</p>
+        <% } %>
+    </div>
+
+    <div class="card">
+        <h3><i class="fas fa-dns"></i> DNS Manager</h3>
+        <p>Kelola A, CNAME, MX, dan record lainnya untuk domain Anda.</p>
+        <a href="/dashboard/domain/<%= domain.id %>/dns" class="btn btn-primary" style="margin-top: 1rem;">Buka DNS Manager</a>
+    </div>
+
+    <div class="card">
+        <h3><i class="fas fa-lock"></i> Registrar Lock</h3>
+        <div class="detail-item">
+            <span>Status Lock</span>
+            <% if (domain.is_locked) { %>
+                <span class="status-badge locked">AKTIF</span>
+            <% } else { %>
+                <span class="status-badge unlocked">NONAKTIF</span>
+            <% } %>
+        </div>
+        <form action="/dashboard/domain/<%= domain.id %>/toggle-lock" method="POST" style="margin-top: 1rem;" onsubmit="return confirm('Yakin ingin mengubah status lock domain ini?');">
+            <% if (domain.is_locked) { %>
+                <button type="submit" class="btn btn-secondary">Buka Kunci (Unlock)</button>
+            <% } else { %>
+                <button type="submit" class="btn btn-primary">Kunci (Lock)</button>
+            <% } %>
+        </form>
+    </div>
+    
+    <div class="card">
+        <h3><i class="fas fa-cogs"></i> Tindakan Lain</h3>
+        <p>Jika Anda belum menerima email verifikasi kontak, Anda bisa mengirimnya ulang.</p>
+        <form action="/dashboard/domain/<%= domain.id %>/resend-verification" method="POST" style="margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary">Kirim Ulang Email Verifikasi</button>
+        </form>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

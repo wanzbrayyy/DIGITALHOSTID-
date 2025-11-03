@@ -1,0 +1,70 @@
+<%- include('../partials/header', { title: `Tiket: ${ticket.subject}` }) %>
+
+<style>
+    .support-status { padding: 10px 15px; border-radius: var(--nexus-radius); margin-bottom: 1rem; text-align: center; border: 1px solid transparent; }
+    .support-status.pending { background-color: #fffbeb; color: #b45309; border-color: #fde68a; }
+    .support-status.assigned { background-color: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+    .chat-container { display: flex; flex-direction: column; gap: 1.5rem; }
+    .chat-bubble { max-width: 75%; padding: 1rem; border-radius: 12px; position: relative; word-wrap: break-word; }
+    .chat-bubble p { margin: 0; }
+    .bubble-header { font-weight: bold; font-size: 0.9rem; margin-bottom: 5px; }
+    .bubble-footer { display: block; margin-top: 8px; font-size: 0.8rem; text-align: right; }
+    .user-reply { background-color: var(--nexus-primary); color: white; align-self: flex-end; }
+    .user-reply .bubble-header, .user-reply .bubble-footer { color: rgba(255, 255, 255, 0.9); }
+    .support-reply { background-color: #e5e7eb; align-self: flex-start; }
+    .support-reply .bubble-header, .support-reply .bubble-footer { color: #555; }
+    .attachment-box { margin-top: 10px; padding: 10px; background-color: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; display: inline-block; }
+    .user-reply .attachment-box { background-color: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+    .attachment-box a { text-decoration: none; color: inherit; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+</style>
+
+<% if (ticket.assignedTo) { %>
+    <div class="support-status assigned">Anda terhubung dengan Support: <strong><%= ticket.assignedTo.name %></strong></div>
+<% } else { %>
+    <div class="support-status pending">Menunggu balasan dari tim support...</div>
+<% } %>
+
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>Tiket: <%= ticket.subject %></h1>
+</div>
+
+<div class="card">
+    <div class="chat-container">
+        <% ticket.messages.forEach(msg => { %>
+            <% const isMyMessage = msg.sender._id.toString() === user.id.toString() %>
+            <div class="chat-bubble <%= isMyMessage ? 'user-reply' : 'support-reply' %>">
+                <div class="bubble-header"><%= msg.sender.name %></div>
+                <p><%- msg.message.replace(/\n/g, '<br>') %></p>
+                <% if (msg.imageUrl) { %>
+                    <div class="attachment-box">
+                        <a href="<%= msg.imageUrl %>" target="_blank" rel="noopener noreferrer">
+                            <i class="fas fa-image"></i>
+                            <span>Laporan Foto dari: <%= msg.sender.name %></span>
+                        </a>
+                    </div>
+                <% } %>
+                <small class="bubble-footer"><%= new Date(msg.createdAt).toLocaleString('id-ID') %></small>
+            </div>
+        <% }) %>
+    </div>
+</div>
+
+<% if (ticket.status !== 'Ditutup') { %>
+    <div class="card">
+        <h3>Tulis Balasan</h3>
+        <form action="/dashboard/tickets/<%= ticket._id %>/reply" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <textarea name="message" class="form-control" rows="5" required placeholder="Tulis balasan Anda di sini..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="attachment">Lampirkan Foto (Opsional)</label>
+                <input type="file" name="attachment" id="attachment" class="form-control" accept="image/png, image/jpeg, image/gif">
+            </div>
+            <button type="submit" class="btn btn-primary">Kirim Balasan</button>
+        </form>
+    </div>
+<% } else { %>
+    <div class="alert alert-danger">Tiket ini telah ditutup. Anda tidak dapat mengirim balasan lagi.</div>
+<% } %>
+
+<%- include('../partials/footer') %>

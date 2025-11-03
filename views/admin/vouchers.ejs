@@ -1,0 +1,67 @@
+<%- include('../partials/header', { title: 'Manajemen Voucher' }) %>
+
+<h1><i class="fas fa-percent"></i> Manajemen Voucher</h1>
+<p>Buat dan kelola kode diskon untuk pengguna.</p>
+
+<div class="card">
+    <h2>Buat Voucher Baru</h2>
+    <form action="/admin/vouchers/create" method="POST">
+        <div class="form-group">
+            <label for="code">Kode Voucher (tanpa spasi, huruf kapital)</label>
+            <input type="text" id="code" name="code" class="form-control" required style="text-transform: uppercase;">
+        </div>
+        <div class="form-group">
+            <label for="discount">Diskon (dalam %)</label>
+            <input type="number" id="discount" name="discount" class="form-control" required min="1" max="100">
+        </div>
+         <div class="form-group">
+            <label for="expiryDate">Tanggal Kedaluwarsa</label>
+            <input type="date" id="expiryDate" name="expiryDate" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Buat Voucher</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Voucher Aktif</h2>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Kode</th>
+                    <th>Diskon</th>
+                    <th>Kedaluwarsa</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if(vouchers && vouchers.length > 0) { %>
+                    <% vouchers.forEach(voucher => { %>
+                        <tr>
+                            <td><strong><%= voucher.code %></strong></td>
+                            <td><%= voucher.discount %>%</td>
+                            <td><%= new Date(voucher.expiryDate).toLocaleDateString('id-ID') %></td>
+                            <td>
+                                <% if(new Date(voucher.expiryDate) < new Date() || !voucher.isActive) { %>
+                                    <span style="color: var(--nexus-danger);">Tidak Aktif</span>
+                                <% } else { %>
+                                    <span style="color: var(--nexus-success);">Aktif</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <form action="/admin/vouchers/<%= voucher._id %>/delete" method="POST" onsubmit="return confirm('Yakin ingin menghapus voucher ini?')">
+                                    <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr><td colspan="5" style="text-align: center; padding: 20px;">Belum ada voucher yang dibuat.</td></tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

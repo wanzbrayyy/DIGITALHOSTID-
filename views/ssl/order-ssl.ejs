@@ -1,0 +1,41 @@
+<%- include('../partials/header', { title: title }) %>
+
+<h1>Konfigurasi SSL: <%= product.name %></h1>
+<p>Silakan isi detail di bawah ini untuk membuat Certificate Signing Request (CSR).</p>
+
+<div class="card">
+    <form action="/ssl/order/<%= product.id %>/generate-csr" method="POST">
+        <div class="form-group">
+            <label for="csr_name">Nama Domain (Common Name)</label>
+            <input type="text" name="csr_name" id="csr_name" class="form-control" required placeholder="contoh.com atau www.contoh.com">
+            <small>Untuk Wildcard, gunakan format: *.contoh.com</small>
+        </div>
+        <div class="form-group">
+            <label for="csr_email">Email Kontak</label>
+            <input type="email" name="csr_email" id="csr_email" class="form-control" required placeholder="admin@contoh.com">
+        </div>
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="csr_organization">Organisasi</label>
+                <input type="text" name="csr_organization" id="csr_organization" class="form-control" required placeholder="Nama Perusahaan Anda">
+            </div>
+            <div class="form-group">
+                <label for="csr_department">Departemen</label>
+                <input type="text" name="csr_department" id="csr_department" class="form-control" required value="IT">
+            </div>
+        </div>
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="csr_city">Kota</label>
+                <input type="text" name="csr_city" id="csr_city" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="csr_state">Provinsi</label>
+                <input type="text" name="csr_state" id="csr_state" class="form-control" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Lanjutkan ke Konfirmasi</button>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,74 @@
+<%- include('../partials/header', { title: 'Pengaturan Harga' }) %>
+
+<h1><i class="fas fa-dollar-sign"></i> Pengaturan Harga</h1>
+<p>Atur harga dinamis untuk ekstensi domain, proteksi WHOIS, dan produk SSL.</p>
+
+<div class="grid-2">
+    <div class="card">
+        <h2>Harga Proteksi WHOIS</h2>
+        <form action="/admin/settings-harga/update" method="POST">
+            <input type="hidden" name="setting_type" value="whois">
+            <div class="form-group">
+                <label for="whois_price">Harga (angka saja)</label>
+                <input type="number" name="whois_price" class="form-control" value="<%= whoisPrice %>">
+            </div>
+            <button type="submit" class="btn btn-primary">Update Harga WHOIS</button>
+        </form>
+    </div>
+    <div class="card">
+        <h2>Harga TLD Domain</h2>
+        <form action="/admin/settings-harga/update" method="POST" style="display: flex; gap: 1rem; align-items: flex-end;">
+            <input type="hidden" name="setting_type" value="tld">
+            <div class="form-group" style="flex-grow: 1; margin:0;">
+                <label>TLD (cth: com)</label>
+                <input type="text" name="tld" class="form-control" placeholder="com" required>
+            </div>
+            <div class="form-group" style="flex-grow: 1; margin:0;">
+                <label>Harga (cth: 150000)</label>
+                <input type="number" name="price" class="form-control" placeholder="150000" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Update</button>
+        </form>
+        <hr>
+        <h4>Harga Saat Ini:</h4>
+        <% Object.entries(tldPrices).forEach(([tld, price]) => { %>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee;">
+                <span>.<%= tld %></span>
+                <strong>Rp <%= price.toLocaleString('id-ID') %></strong>
+                <form action="/admin/settings-harga/update" method="POST">
+                    <input type="hidden" name="setting_type" value="tld_remove">
+                    <input type="hidden" name="remove_tld" value="<%= tld %>">
+                    <button type="submit" class="btn btn-danger btn-sm" style="padding: 2px 8px;">&times;</button>
+                </form>
+            </div>
+        <% }) %>
+    </div>
+</div>
+<div class="card">
+    <h2>Harga Override SSL</h2>
+    <p>Isi harga custom untuk produk SSL. Kosongkan untuk menggunakan harga default API.</p>
+    <form action="/admin/settings-harga/update" method="POST">
+        <input type="hidden" name="setting_type" value="ssl">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>Nama Produk SSL</th><th>Harga Custom (IDR)</th></tr>
+                </thead>
+                <tbody>
+                    <% sslApiProducts.forEach(product => { %>
+                        <tr>
+                            <td><%= product.name %></td>
+                            <td>
+                                <div class="form-group" style="margin:0;">
+                                    <input type="number" name="ssl_prices[<%= product.name %>]" class="form-control" placeholder="Kosongkan = default" value="<%= sslPrices[product.name] || '' %>">
+                                </div>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Simpan Semua Harga SSL</button>
+    </form>
+</div>
+<%- include('../partials/footer') %>

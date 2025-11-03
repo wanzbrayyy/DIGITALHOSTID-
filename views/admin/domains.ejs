@@ -1,0 +1,57 @@
+<%- include('../partials/header', { title: title || 'Manajemen Domain' }) %>
+
+<h1><i class="fas fa-globe-americas"></i> Manajemen Domain</h1>
+<p>Daftar semua domain yang terdaftar melalui sistem. Anda dapat melakukan tindakan seperti men-suspend domain dari sini.</p>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama Domain</th>
+                    <th>ID Pelanggan</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (domains && domains.length > 0) { %>
+                    <% domains.forEach(domain => { %>
+                        <% const status = (domain.status_desc || '').toLowerCase(); %>
+                        <tr>
+                            <td style="font-weight: 500;"><%= domain.name || 'N/A' %></td>
+                            <td><%= domain.customer_id || 'N/A' %></td>
+                            <td><span class="status-<%= status %>"><%= domain.status_desc || 'Tidak Diketahui' %></span></td>
+                            <td>
+                                <% if (status === 'active') { %>
+                                    <form action="/admin/domains/<%= domain.id %>/suspend" method="POST" style="display: flex; align-items: center; gap: 10px;" onsubmit="return confirm('Yakin ingin men-suspend domain ini?');">
+                                        <input type="text" name="reason" placeholder="Alasan Suspend" class="form-control form-control-sm" required style="padding: 8px 12px; min-width: 150px;">
+                                        <button type="submit" class="btn btn-danger btn-sm">Suspend</button>
+                                    </form>
+                                <% } else if (status === 'suspended') { %>
+                                    <form action="/admin/domains/<%= domain.id %>/unsuspend" method="POST" onsubmit="return confirm('Yakin ingin mengaktifkan kembali domain ini?');">
+                                        <button type="submit" class="btn btn-primary btn-sm">Unsuspend</button>
+                                    </form>
+                                <% } else { %>
+                                    <span style="color: #888;">(Tidak ada aksi)</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="4" style="padding: 20px; text-align: center;">Tidak ada domain yang ditemukan.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .status-active { color: var(--nexus-success); font-weight: bold; }
+    .status-suspended { color: var(--nexus-danger); font-weight: bold; }
+    .status-pending, .status-pending-transfer { color: var(--nexus-warning); }
+</style>
+
+<%- include('../partials/footer') %>

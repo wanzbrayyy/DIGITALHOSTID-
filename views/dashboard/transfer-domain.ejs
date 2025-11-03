@@ -1,0 +1,23 @@
+<%- include('../partials/header', { title: 'Transfer Domain' }) %>
+
+<h1><i class="fas fa-exchange-alt"></i> Transfer Domain Masuk</h1>
+<p>Pindahkan domain Anda dari registrar lain ke DigitalHostID untuk pengelolaan yang lebih mudah.</p>
+
+<div class="card">
+    <form action="/dashboard/transfer-domain" method="POST">
+        <div class="form-group">
+            <label for="name">Nama Domain</label>
+            <input type="text" name="name" id="name" class="form-control" placeholder="contohdomain.com" required>
+        </div>
+        <div class="form-group">
+            <label for="auth_code">Kode EPP / Auth Code</label>
+            <input type="text" name="auth_code" id="auth_code" class="form-control" placeholder="Dapatkan dari registrar Anda saat ini" required>
+        </div>
+        <p style="color: #666; font-size: 0.9rem; border-left: 3px solid var(--nexus-warning); padding-left: 15px;">
+            <strong>Penting:</strong> Pastikan domain Anda sudah di-unlock (tidak dikunci) di registrar lama sebelum memulai proses transfer.
+        </p>
+        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Mulai Proses Transfer</button>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,5 @@
+<% if (user && user.avatar) { %>
+    <img src="<%= user.avatar %>" alt="Avatar Pengguna" class="user-avatar-img">
+<% } else { %>
+    <canvas id="user-avatar-canvas" class="user-avatar-canvas" data-name="<%= user ? user.name : 'User' %>"></canvas>
+<% } %>

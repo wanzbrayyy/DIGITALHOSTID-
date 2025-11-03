@@ -1,0 +1,75 @@
+<%- include('../partials/header', { title: 'Pengaturan Akun' }) %>
+
+<style>
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    .profile-picture-container {
+        text-align: center;
+    }
+    .profile-picture {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 1rem;
+        border: 3px solid var(--nexus-primary);
+    }
+    #profilePicture {
+        display: none;
+    }
+    .upload-label {
+        cursor: pointer;
+        color: var(--nexus-primary-dark);
+        font-weight: 600;
+    }
+</style>
+
+<h1><i class="fas fa-user-cog"></i> Pengaturan Akun</h1>
+<p>Perbarui informasi profil dan kontak Anda agar selalu valid dan terbaru.</p>
+
+<div class="card">
+    <form action="/dashboard/settings" method="POST" enctype="multipart/form-data">
+        
+        <div class="profile-picture-container form-group">
+            <img src="<%= user.profilePicture %>" data-name="<%= user.name %>" class="profile-picture default-avatar-img" alt="Avatar">
+            <label for="profilePicture" class="upload-label">Ubah Foto Profil</label>
+            <input type="file" id="profilePicture" name="profilePicture" accept="image/png, image/jpeg, image/gif">
+            <small style="color: var(--nexus-text-gray); display: block; margin-top: 0.5rem;">Maks 2MB.</small>
+        </div>
+
+        <hr style="margin: 2rem 0;">
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="name">Nama Lengkap</label>
+                <input type="text" id="name" name="name" class="form-control" value="<%= user.name %>" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" class="form-control" value="<%= user.email %>" required>
+            </div>
+        </div>
+
+        <hr style="margin: 1.5rem 0;">
+
+        <div class="form-group"><label for="organization">Organisasi</label><input type="text" id="organization" name="organization" class="form-control" value="<%= user.organization || '' %>"></div>
+        <div class="form-group"><label for="street_1">Alamat</label><input type="text" id="street_1" name="street_1" class="form-control" value="<%= user.street_1 || '' %>" required></div>
+        <div class="grid-2">
+            <div class="form-group"><label for="city">Kota</label><input type="text" id="city" name="city" class="form-control" value="<%= user.city || '' %>" required></div>
+            <div class="form-group"><label for="state">Provinsi</label><input type="text" id="state" name="state" class="form-control" value="<%= user.state || '' %>" required></div>
+        </div>
+        <div class="grid-2">
+            <div class="form-group"><label for="postal_code">Kode Pos</label><input type="text" id="postal_code" name="postal_code" class="form-control" value="<%= user.postal_code || '' %>" required></div>
+            <div class="form-group"><label for="voice">Nomor Telepon</label><input type="tel" id="voice" name="voice" class="form-control" value="<%= user.voice || '' %>" required></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+            <i class="fas fa-save"></i> Simpan Perubahan
+        </button>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>

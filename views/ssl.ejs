@@ -1,0 +1,82 @@
+<%- include('partials/header', { title: 'Beli Sertifikat SSL' }) %>
+
+<style>
+    .price-original {
+        text-decoration: line-through;
+        color: var(--nexus-text-gray);
+        font-size: 0.85rem;
+        margin-left: 8px;
+    }
+    /* Spinner akan disembunyikan secara default */
+    #ssl-table-spinner {
+        display: none;
+        text-align: center;
+        padding: 50px;
+    }
+</style>
+
+<h1>Beli Sertifikat SSL</h1>
+<p>Amankan website Anda dan tingkatkan kepercayaan pengunjung dengan enkripsi SSL.</p>
+
+<!-- Spinner untuk loading -->
+<div id="ssl-table-spinner" class="card">
+    <div class="spinner"></div>
+    <p style="margin-top: 1rem; color: var(--nexus-text-gray);">Memuat produk...</p>
+</div>
+
+<!-- Tabel akan disembunyikan secara default -->
+<div id="ssl-table-container" class="table-wrapper card" style="display: none;">
+    <table>
+        <thead>
+            <tr>
+                <th>Nama Produk</th>
+                <th>Tipe</th>
+                <th>Validasi</th>
+                <th>Harga/Tahun</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (sslProducts && sslProducts.length > 0) { %>
+                <% sslProducts.forEach(product => { %>
+                    <tr>
+                        <td><strong><%= product.name %></strong><br><small><%= product.brand %></small></td>
+                        <td><%= product.type %> <%= product.is_wildcard ? 'Wildcard' : '' %></td>
+                        <td><%= product.validation %></td>
+                        <td>
+                            <strong>Rp <%= product.price.toLocaleString('id-ID') %></strong>
+                            <% if (product.has_override && product.price < product.original_price) { %>
+                                <span class="price-original">Rp <%= product.original_price.toLocaleString('id-ID') %></span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <a href="/ssl/order/<%= product.id %>" class="btn btn-primary btn-sm">Pesan</a>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr><td colspan="5" style="text-align: center; padding: 20px;">Produk SSL tidak tersedia saat ini. Silakan coba lagi nanti.</td></tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const spinner = document.getElementById('ssl-table-spinner');
+        const tableContainer = document.getElementById('ssl-table-container');
+
+        // Tampilkan spinner, sembunyikan tabel
+        spinner.style.display = 'block';
+        tableContainer.style.display = 'none';
+
+        // Beri sedikit jeda agar rendering spinner selesai, lalu tampilkan tabel
+        // Ini memberikan efek "loading" yang lebih baik
+        setTimeout(() => {
+            spinner.style.display = 'none';
+            tableContainer.style.display = 'block';
+        }, 500); // 0.5 detik
+    });
+</script>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,69 @@
+<%- include('../partials/header', { title: 'Dashboard' }) %>
+
+<style>
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--nexus-border-color); }
+    table th { font-weight: 600; background-color: #f9fafb; }
+    .action-icons a { margin-right: 15px; font-size: 1.2rem; color: var(--nexus-text-gray); }
+    .action-icons a:hover { color: var(--nexus-primary-dark); }
+    .status-active { color: var(--nexus-success); font-weight: bold; }
+    .status-suspended { color: var(--nexus-danger); font-weight: bold; }
+</style>
+
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+    <h1>Selamat Datang, <%= user.name.split(' ')[0] %>!</h1>
+    <div style="display: flex; gap: 1rem;">
+        <a href="/dashboard/transfer-domain" class="btn btn-secondary">
+            <i class="fas fa-exchange-alt"></i> Transfer Domain
+        </a>
+        <a href="/dashboard/buy-domain" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Beli Domain Baru
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <h2><i class="fas fa-globe" style="margin-right: 10px; color: var(--nexus-primary);"></i>Domain Anda</h2>
+    
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama Domain</th>
+                    <th>Status</th>
+                    <th>Kedaluwarsa</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (domains && domains.length > 0) { %>
+                    <% domains.forEach(domain => { %>
+                        <tr>
+                            <td><strong><%= domain.name %></strong></td>
+                            <td><span class="status-<%= (domain.status_desc || '').toLowerCase() %>"><%= domain.status_desc %></span></td>
+                            <td><%= new Date(domain.expiry_date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) %></td>
+                            <td class="action-icons">
+                                <a href="/dashboard/domain/<%= domain.id %>/manage" title="Kelola Domain">
+                                    <i class="fas fa-cog"></i>
+                                </a>
+                                <a href="/dashboard/domain/<%= domain.id %>/dns" title="DNS Manager">
+                                    <i class="fas fa-dns"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="4" style="padding: 20px; text-align: center;">
+                            Anda belum memiliki domain. <br>
+                            <a href="/dashboard/buy-domain" style="margin-top: 1rem; display: inline-block;">Daftarkan domain pertama Anda sekarang!</a>
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>```

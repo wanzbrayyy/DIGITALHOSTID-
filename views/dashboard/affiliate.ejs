@@ -1,0 +1,92 @@
+<%- include('../partials/header', { title: 'Program Afiliasi' }) %>
+
+<style>
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+    .affiliate-link-input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid var(--nexus-border-color);
+        border-radius: var(--nexus-radius);
+        font-size: 1rem;
+        background-color: #f9fafb;
+        margin-top: 1rem;
+        cursor: pointer;
+    }
+    .table-wrapper { 
+        overflow-x: auto; 
+    }
+    table { 
+        width: 100%; 
+        border-collapse: collapse; 
+    }
+    table th, table td { 
+        padding: 12px 15px; 
+        text-align: left; 
+        border-bottom: 1px solid var(--nexus-border-color); 
+    }
+    table th { 
+        font-weight: 600; 
+        background-color: #f9fafb; 
+    }
+    .status-pending { 
+        color: var(--nexus-warning); 
+    }
+    .status-credited { 
+        color: var(--nexus-success); 
+        font-weight: bold; 
+    }
+</style>
+
+<h1><i class="fas fa-users"></i> Program Afiliasi</h1>
+<p>Dapatkan komisi dengan mengajak teman Anda bergabung dengan DigitalHostID.</p>
+
+<div class="grid-2">
+    <div class="card">
+        <h3>Link Afiliasi Unik Anda</h3>
+        <p>Bagikan link di bawah ini untuk mulai mendapatkan komisi dari setiap pendaftaran baru.</p>
+        <input type="text" class="affiliate-link-input" value="<%= referralLink %>" readonly onclick="this.select()">
+    </div>
+     <div class="card">
+        <h3>Total Pendapatan</h3>
+        <h2 style="font-size: 2.5rem; color: var(--nexus-success); margin-top: 1rem;">Rp <%= (user.affiliateBalance || 0).toLocaleString('id-ID') %></h2>
+        <small style="color: var(--nexus-text-gray);">Pendapatan akan ditambahkan setelah referral melakukan pembelian pertama.</small>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Pengguna yang Anda Referensikan</h3>
+     <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Pengguna</th>
+                    <th>Tanggal Bergabung</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if(referrals && referrals.length > 0) { %>
+                    <% referrals.forEach(ref => { %>
+                        <tr>
+                            <td><%= ref.referredUser ? ref.referredUser.name : 'Pengguna Dihapus' %></td>
+                            <td><%= new Date(ref.createdAt).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) %></td>
+                            <td>
+                                <span class="status-<%= ref.status %>">
+                                    <%= ref.status === 'pending' ? 'Tertunda' : 'Dikreditkan' %>
+                                </span>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr><td colspan="3" style="text-align: center; padding: 20px;">Belum ada pengguna yang bergabung melalui link Anda.</td></tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

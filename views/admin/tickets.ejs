@@ -1,0 +1,45 @@
+<%- include('../partials/header', { title: 'Manajemen Tiket' }) %>
+
+<h1><i class="fas fa-life-ring"></i> Manajemen Tiket Bantuan</h1>
+<p>Kelola semua tiket bantuan yang dikirimkan oleh pengguna.</p>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Subjek</th>
+                    <th>Pengguna</th>
+                    <th>Departemen</th>
+                    <th>Status</th>
+                    <th>Update Terakhir</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (tickets && tickets.length > 0) { %>
+                    <% tickets.forEach(ticket => { %>
+                        <tr>
+                            <td><strong><%= ticket.subject %></strong></td>
+                            <td><%= ticket.user.name %></td>
+                            <td><%= ticket.department %></td>
+                            <td><span class="status-<%= ticket.status.toLowerCase() %>"><%= ticket.status %></span></td>
+                            <td><%= new Date(ticket.updatedAt).toLocaleString('id-ID') %></td>
+                            <td><a href="/admin/tickets/<%= ticket._id %>" class="btn btn-secondary btn-sm">Lihat</a></td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr><td colspan="6" style="text-align: center; padding: 20px;">Tidak ada tiket yang ditemukan.</td></tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .status-buka { color: var(--nexus-success); font-weight: bold; }
+    .status-dijawab { color: var(--nexus-warning); font-weight: bold; }
+    .status-ditutup { color: var(--nexus-text-gray); }
+</style>
+
+<%- include('../partials/footer') %>

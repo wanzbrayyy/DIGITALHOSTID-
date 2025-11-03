@@ -1,0 +1,111 @@
+<%- include('../partials/header', { title: 'Beli Domain Baru' }) %>
+
+<style>
+    #domain-search-form {
+        display: flex;
+        box-shadow: var(--nexus-shadow);
+        border-radius: 50px;
+        margin-top: 1rem;
+    }
+    #domain-input {
+        flex-grow: 1;
+        padding: 16px 25px;
+        border: 1px solid var(--nexus-border-color);
+        font-size: 1rem;
+        border-radius: 50px 0 0 50px;
+        outline: none;
+        border-right: none;
+    }
+    #domain-search-button {
+        padding: 16px 30px;
+        border-radius: 0 50px 50px 0;
+        background: var(--nexus-secondary);
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    #domain-results { margin-top: 2rem; }
+    .result-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .domain-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    .status-available {
+        color: var(--nexus-success);
+        font-weight: 600;
+        margin-right: 1rem;
+    }
+    .status-taken {
+        color: var(--nexus-text-gray);
+    }
+    .spinner {
+        border: 4px solid rgba(0,0,0,0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border-left-color: var(--nexus-secondary);
+        animation: spin 1s ease infinite;
+        margin: 20px auto;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <h2><i class="fas fa-search"></i> Cari Domain Baru</h2>
+    <p>Wujudkan ide Anda dengan nama domain yang sempurna.</p>
+    <form id="domain-search-form">
+        <input type="text" id="domain-input" class="form-control" placeholder="contoh: wanzofc" required>
+        <button type="submit" id="domain-search-button" class="btn btn-secondary">Cari</button>
+    </form>
+    <div id="domain-results" style="margin-top: 2rem;"></div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const domainForm = document.getElementById('domain-search-form');
+        const domainInput = document.getElementById('domain-input');
+        const domainResults = document.getElementById('domain-results');
+
+        domainForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const keyword = domainInput.value.trim();
+            if (!keyword) {
+                domainResults.innerHTML = `<p style="text-align: center; color: var(--nexus-danger);">Harap masukkan nama domain.</p>`;
+                return;
+            }
+            domainResults.innerHTML = '<div class="spinner"></div>';
+            try {
+                const response = await fetch('/check-domain', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keyword: keyword }) });
+                if (!response.ok) throw new Error('Network error');
+                const results = await response.json();
+                let resultsHTML = '<ul style="list-style: none; padding: 0;">';
+                results.forEach(result => {
+                    let statusHTML = '';
+                    if (result.error) {
+                        statusHTML = `<span class="status-taken">Gagal memeriksa</span>`;
+                    } else if (result.status === 'available') {
+                        const orderUrl = `/order-domain?domain=${result.name}`;
+                        statusHTML = `<div><span class="status-available">TERSEDIA</span> <a href="${orderUrl}" class="btn btn-primary btn-sm">Pesan</a></div>`;
+                    } else {
+                        statusHTML = `<span class="status-taken">Sudah Diambil</span>`;
+                    }
+                    resultsHTML += `<li class="card result-item"><span class="domain-name">${result.name}</span> ${statusHTML}</li>`;
+                });
+                resultsHTML += '</ul>';
+                domainResults.innerHTML = resultsHTML;
+            } catch (error) {
+                domainResults.innerHTML = `<p style="text-align: center; color: var(--nexus-danger);">Terjadi kesalahan pada koneksi.</p>`;
+            }
+        });
+    });
+</script>
+
+<%- include('../partials/footer') %>
