@@ -3,9 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= typeof title !== 'undefined' ? title : 'DigitalHostID' %></title>
+    <title><%= typeof title !== 'undefined' ? `${title} | DigitalHostID` : 'DigitalHostID - Domain, Hosting, & SSL Murah' %></title>
+    <meta name="description" content="<%= typeof description !== 'undefined' ? description : 'DigitalHostID menyediakan layanan daftar domain, hosting cepat, dan sertifikat ssl untuk kebutuhan online Anda. mulai dari Rp 25.000.' %>">
+    <meta name="keywords" content="<%= typeof keywords !== 'undefined' ? keywords : 'domain murah, hosting indonesia, beli ssl, digitalhostid, web hosting' %>">
+    <link rel="canonical" href="<%= typeof canonicalUrl !== 'undefined' ? canonicalUrl : process.env.APP_BASE_URL %>" />
+    <meta property="og:title" content="<%= typeof title !== 'undefined' ? `${title} | DigitalHostID` : 'DigitalHostID - domain, hosting, & ssl murah' %>" />
+    <meta property="og:description" content="<%= typeof description !== 'undefined' ? description : 'DigitalHostID menyediakan layanan daftar domain, hosting cepat, dan sertifikat ssl.' %>" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="<%= typeof canonicalUrl !== 'undefined' ? canonicalUrl : process.env.APP_BASE_URL %>" />
+    <meta property="og:image" content="https://files.catbox.moe/sepzlr.png" />
+    <meta property="og:site_name" content="DigitalHostID" />
+    <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+
     <style>
         :root {
             --nexus-primary: #82aaff; --nexus-primary-dark: #577ed4; --nexus-secondary: #8e44ad; --nexus-secondary-dark: #6c3483; --nexus-background-dark: #1f1d2b; --nexus-background-light: #f4f6f9; --nexus-text-dark: #333333; --nexus-text-light: #ffffff; --nexus-text-gray: #6b7280; --nexus-border-color: #e5e7eb; --nexus-success: #10b981; --nexus-danger: #ef4444; --nexus-warning: #f59e0b; --nexus-font-primary: 'Montserrat', sans-serif; --nexus-font-secondary: 'Poppins', sans-serif; --nexus-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); --nexus-radius: 8px;
@@ -61,11 +72,25 @@
         .bottom-nav-item i { font-size: 1.5rem; margin-bottom: 4px; }
         @media (max-width: 768px) { #public-nav-toggle { display: block; } .top-bar-right .desktop-nav { display: none; } }
     </style>
+        <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "DigitalHostID",
+      "url": "<%= process.env.APP_BASE_URL %>",
+      "logo": "https://files.catbox.moe/sepzlr.png",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+1 548 919 5889",
+        "contactType": "Customer Service"
+      }
+    }
+    </script>
 </head>
 <body>
     <header class="top-bar">
         <a href="/" class="top-bar-brand">
-             <img src="https://files.catbox.moe/sepzlr.png" alt="Logo">
+             <img src="https://files.catbox.moe/sepzlr.png" alt="Logo DigitalHostID">
              <span>DigitalHostID</span>
         </a>
         <div class="top-bar-right">
