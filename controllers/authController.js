@@ -5,11 +5,20 @@ const domainService = require('../services/domainService');
 const AffiliateReferral = require('../models/affiliatereferral');
 
 exports.getLoginPage = (req, res) => {
-    res.render('login', { title: 'Login' });
+    res.render('login', {
+        title: 'login account',
+        description: 'masuk ke akun DigitalHostID anda untuk mengelola domain, hosting, dan layanan lainnya.',
+        canonicalUrl: process.env.APP_BASE_URL + '/login'
+    });
 };
 
 exports.getRegisterPage = (req, res) => {
-    res.render('register', { title: 'Registrasi', plan: req.query.plan || '' });
+    res.render('register', {
+        plan: req.query.plan || '',
+        title: 'daftar account',
+        description: 'daftar akun baru di DigitalHostID untuk mulai membeli domain, hosting, dan layanan ssl dengan mudah dan cepat.',
+        canonicalUrl: process.env.APP_BASE_URL + '/register'
+    });
 };
 
 exports.postLogin = async (req, res) => {
