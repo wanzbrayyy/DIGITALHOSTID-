@@ -1,0 +1,25 @@
+<%- include('partials/header', { title: title }) %>
+<style>
+    .status-item { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid #eee; }
+    .status-badge { padding: 5px 12px; border-radius: 20px; font-weight: bold; color: white; }
+    .status-operational { background-color: var(--nexus-success); }
+    .status-maintenance { background-color: var(--nexus-primary); }
+    .status-degraded-performance { background-color: var(--nexus-warning); }
+    .status-outage { background-color: var(--nexus-danger); }
+</style>
+<div class="card">
+    <h1>Status Sistem</h1>
+    <p>Status operasional layanan kami secara real-time.</p>
+    <% if (services && services.length > 0) { services.forEach(service => { %>
+        <div class="status-item">
+            <div>
+                <h3 style="margin: 0;"><%= service.name %></h3>
+                <small style="color: #888;"><%= service.description || 'Semua sistem berjalan normal.' %></small>
+            </div>
+            <span class="status-badge status-<%= service.status.replace(/\s+/g, '-').toLowerCase() %>"><%= service.status %></span>
+        </div>
+    <% }) } else { %>
+        <p>Status layanan tidak tersedia saat ini.</p>
+    <% } %>
+</div>
+<%- include('partials/footer') %>

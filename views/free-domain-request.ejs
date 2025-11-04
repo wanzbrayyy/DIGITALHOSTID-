@@ -1,0 +1,28 @@
+<%- include('partials/header', { title: title }) %>
+
+<div class="card" style="max-width: 600px; margin: 2rem auto;">
+    <h1>Formulir Permintaan Domain Gratis</h1>
+    <p>Khusus untuk organisasi non-profit, institusi pendidikan, atau proyek open-source yang terverifikasi.</p>
+    
+    <form action="/free-domain-request" method="POST" style="margin-top: 1.5rem;">
+        <div class="form-group">
+            <label for="name">Nama Lengkap Anda</label>
+            <input type="text" id="name" name="name" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Alamat Email Kontak</label>
+            <input type="email" id="email" name="email" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="domainName">Nama Domain yang Diinginkan</label>
+            <input type="text" id="domainName" name="domainName" class="form-control" required placeholder="proyekhebat.org">
+        </div>
+        <div class="form-group">
+            <label for="purpose">Jelaskan Tujuan & Proyek Anda</label>
+            <textarea id="purpose" name="purpose" class="form-control" rows="5" required placeholder="Jelaskan secara singkat mengenai organisasi/proyek Anda dan mengapa Anda membutuhkan domain gratis."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Kirim Permintaan</button>
+    </form>
+</div>
+
+<%- include('partials/footer') %>
