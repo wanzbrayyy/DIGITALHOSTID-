@@ -5,6 +5,7 @@ const { ensureAuthenticated } = require('../middleware/auth');
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
+
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -13,11 +14,7 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: {
-        folder: 'digitalhostid',
-        format: async (req, file) => 'png',
-        public_id: (req, file) => `user-${req.session.user.id}`
-    }
+    params: { folder: 'digitalhostid', public_id: (req, file) => `user-${req.session.user.id}` }
 });
 
 const upload = multer({ storage: storage });
@@ -28,6 +25,7 @@ router.get('/dashboard', dashboardController.getDashboard);
 router.get('/dashboard/buy-domain', dashboardController.getBuyDomainPage);
 router.get('/dashboard/transfer-domain', dashboardController.getTransferDomainPage);
 router.post('/dashboard/transfer-domain', dashboardController.postTransferDomain);
+router.get('/dashboard/renew', dashboardController.getRenewPage);
 
 router.get('/dashboard/domain/:id/manage', dashboardController.getManageDomainPage);
 router.post('/dashboard/domain/:id/toggle-lock', dashboardController.toggleLock);

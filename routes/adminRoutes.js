@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
+const affiliateController = require('../controllers/affiliateController');
 const { ensureAuthenticated, isAdmin } = require('../middleware/auth');
 
 router.use(ensureAuthenticated, isAdmin);
@@ -30,5 +31,11 @@ router.post('/promos/:id/delete', adminController.deletePromo);
 
 router.get('/settings-harga', adminController.getSettingsHargaPage);
 router.post('/settings-harga/update', adminController.updateSettingsHarga);
+
+router.get('/free-domain-requests', adminController.getFreeDomainRequests);
+router.post('/free-domain-requests/update', adminController.updateFreeDomainRequestStatus);
+router.get('/system-status', adminController.getSystemStatusManagement);
+router.post('/system-status/update', adminController.updateSystemStatus);
+router.post('/process-affiliates', affiliateController.checkAndProcessAffiliatePayouts);
 
 module.exports = router;
