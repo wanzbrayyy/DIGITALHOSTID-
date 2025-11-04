@@ -3,6 +3,11 @@
 <script type="text/javascript" src="https://app.midtrans.com/snap/snap.js" data-client-key="<%= clientKey %>"></script>
 
 <style>
+    .domain-edit-form { display: flex; align-items: center; gap: 10px; }
+    #domain-status-message { margin-top: 10px; font-weight: bold; }
+    .status-available { color: var(--nexus-success); }
+    .status-taken { color: var(--nexus-danger); }
+    
     .stepper { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 50px; }
     .stepper button { background: #f9f9f9; border: none; padding: 10px 20px; cursor: pointer; font-size: 1.2rem; }
     .stepper input { width: 60px; text-align: center; border: none; font-size: 1.1rem; font-weight: 600; background: transparent; }
@@ -16,9 +21,8 @@
     .detail-item { display: flex; justify-content: space-between; padding: 8px 0; }
     .voucher-form { display: flex; gap: 10px; margin-top: 1.5rem; }
     .discount-row { color: var(--nexus-success); font-weight: bold; }
-    
     .payment-options { margin-top: 2rem; border: 1px solid #eee; border-radius: var(--nexus-radius); overflow: hidden; }
-    .payment-option { display: flex; align-items: center; padding: 1rem; cursor: pointer; border-bottom: 1px solid #eee; transition: background-color 0.2s ease; }
+    .payment-option { display: flex; align-items: center; padding: 1rem; cursor: pointer; border-bottom: 1px solid #eee; }
     .payment-option:last-child { border-bottom: none; }
     .payment-option:hover { background-color: #f9fafb; }
     .payment-option input[type="radio"] { display: none; }
@@ -26,21 +30,26 @@
     .payment-option .details { flex-grow: 1; }
     .payment-option .details strong { display: block; }
     .payment-option .details .balance { color: var(--nexus-success); font-weight: bold; }
-    .payment-option .radio-custom { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ccc; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
-    .payment-option .radio-custom::after { content: ''; width: 10px; height: 10px; background-color: white; border-radius: 50%; transform: scale(0); transition: transform 0.2s ease; }
-    .payment-option input[type="radio"]:checked + .radio-custom { border-color: var(--nexus-primary); background-color: var(--nexus-primary); }
-    .payment-option input[type="radio"]:checked + .radio-custom::after { transform: scale(1); }
+    .payment-option .radio-custom { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ccc; }
+    .payment-option input[type="radio"]:checked ~ .radio-custom { border-color: var(--nexus-primary); background-color: var(--nexus-primary); }
     .payment-option.disabled { color: #aaa; background-color: #f5f5f5; cursor: not-allowed; }
-    .payment-option.disabled .icon { color: #ccc; }
 </style>
 
 <div class="card" style="max-width: 600px; margin: 2rem auto;">
     <h2><i class="fas fa-shopping-cart"></i> Ringkasan Pesanan</h2>
     
     <% if (cart.type === 'domain') { %>
-        <p>Anda akan mendaftarkan domain: <strong><%= cart.item.domain %></strong></p>
+        <p>Anda akan mendaftarkan domain:</p>
+        <div class="form-group" style="margin-top: 1rem;">
+            <div class="domain-edit-form">
+                <input type="text" id="domain-input" class="form-control" value="<%= cart.item.domain %>">
+                <button type="button" id="check-domain-btn" class="btn btn-secondary">Cek</button>
+            </div>
+            <div id="domain-status-message"></div>
+        </div>
+
         <form id="options-form" action="/update-cart-options" method="POST">
-            <div style="margin-top: 2rem;">
+            <div style="margin-top: 1rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                     <h4>Periode Registrasi</h4>
                     <div class="stepper">
@@ -82,23 +91,18 @@
         </div>
     </div>
     
-    <!-- #### VOUCHER FORM DITAMBAHKAN DI SINI #### -->
     <% if (cart.discount && cart.discount.code) { %>
-        <div style="text-align: right; margin-top: 1rem;">
-            <a href="/remove-voucher">Hapus Voucher (<%= cart.discount.code %>)</a>
-        </div>
+        <div style="text-align: right; margin-top: 1rem;"><a href="/remove-voucher">Hapus Voucher (<%= cart.discount.code %>)</a></div>
     <% } else { %>
         <form action="/apply-voucher" method="POST" class="voucher-form">
             <input type="text" name="code" class="form-control" placeholder="Masukkan Kode Voucher" required style="text-transform: uppercase;">
             <button type="submit" class="btn btn-secondary" style="white-space: nowrap;">Terapkan</button>
         </form>
     <% } %>
-    <!-- #### AKHIR VOUCHER FORM #### -->
 
     <form id="checkout-form" action="/process-checkout" method="POST">
         <div class="payment-options">
             <h4 style="padding: 1rem 1rem 0 1rem;">Pilih Metode Pembayaran</h4>
-            
             <label class="payment-option <%= user.creditBalance < cart.pricing.finalPrice ? 'disabled' : '' %>">
                 <div class="icon"><i class="fas fa-wallet"></i></div>
                 <div class="details">
@@ -108,7 +112,6 @@
                 <input type="radio" name="payment_method" value="credit" <%= user.creditBalance < cart.pricing.finalPrice ? 'disabled' : 'checked' %>>
                 <div class="radio-custom"></div>
             </label>
-
             <label class="payment-option">
                 <div class="icon"><i class="fas fa-credit-card"></i></div>
                 <div class="details">
@@ -126,6 +129,61 @@
 </div>
 
 <script>
+    const domainInput = document.getElementById('domain-input');
+    const checkBtn = document.getElementById('check-domain-btn');
+    const statusMsg = document.getElementById('domain-status-message');
+    const payButton = document.getElementById('pay-button');
+    const originalDomain = domainInput.value;
+
+    domainInput.addEventListener('input', () => {
+        if (domainInput.value.trim() !== originalDomain) {
+            payButton.disabled = true;
+            statusMsg.innerHTML = '<span style="color: var(--nexus-warning);">Nama domain diubah. Harap klik "Cek" untuk validasi.</span>';
+        } else {
+            payButton.disabled = false;
+            statusMsg.innerHTML = '';
+        }
+    });
+
+    checkBtn.addEventListener('click', async () => {
+        const newDomain = domainInput.value.trim();
+        if (newDomain === originalDomain) {
+            statusMsg.innerHTML = '<span class="status-available">Domain valid.</span>';
+            payButton.disabled = false;
+            return;
+        }
+
+        statusMsg.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; margin: 0;"></div>';
+        payButton.disabled = true;
+
+        try {
+            const checkRes = await fetch('/check-domain', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ keyword: newDomain })
+            });
+            const checkData = await checkRes.json();
+            
+            if (checkData[0] && checkData[0].status === 'available') {
+                statusMsg.innerHTML = '<span>Mengupdate keranjang...</span>';
+                const updateRes = await fetch('/update-cart-domain', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ newDomain })
+                });
+                if (updateRes.ok) {
+                    window.location.reload();
+                } else {
+                    throw new Error('Gagal mengupdate keranjang.');
+                }
+            } else {
+                statusMsg.innerHTML = '<span class="status-taken">Domain ini sudah diambil atau tidak valid.</span>';
+            }
+        } catch (error) {
+            statusMsg.innerHTML = `<span class="status-taken">Error: ${error.message}</span>`;
+        }
+    });
+
     function changePeriod(amount) {
         const input = document.querySelector('input[name="period"]');
         let value = parseInt(input.value) + amount;
@@ -135,16 +193,15 @@
         }
     }
 
-    const form = document.getElementById('checkout-form');
-    form.addEventListener('submit', async (e) => {
+    const checkoutForm = document.getElementById('checkout-form');
+    checkoutForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
-        const btn = document.getElementById('pay-button');
-        btn.disabled = true;
-        btn.innerHTML = '<div class="spinner" style="border-left-color: white; width: 20px; height: 20px; margin: 0 auto;"></div>';
+        payButton.disabled = true;
+        payButton.innerHTML = '<div class="spinner" style="border-left-color: white; width: 20px; height: 20px; margin: 0 auto;"></div>';
 
         if (paymentMethod === 'credit') {
-            form.submit();
+            checkoutForm.submit();
         } else {
             try {
                 const response = await fetch('/process-checkout', {
@@ -159,15 +216,15 @@
                         onPending: function(result){ window.location.href = '/dashboard/invoices?status=pending'; },
                         onError: function(result){ window.location.href = '/checkout?status=error'; },
                         onClose: function(){
-                            btn.disabled = false;
-                            btn.innerHTML = 'Lanjutkan Pembayaran';
+                            payButton.disabled = false;
+                            payButton.innerHTML = 'Lanjutkan Pembayaran';
                         }
                     });
                 } else { throw new Error(data.error || 'Gagal memulai transaksi.'); }
             } catch (error) {
                 alert('Terjadi kesalahan: ' + error.message);
-                btn.disabled = false;
-                btn.innerHTML = 'Lanjutkan Pembayaran';
+                payButton.disabled = false;
+                payButton.innerHTML = 'Lanjutkan Pembayaran';
             }
         }
     });

@@ -9,11 +9,18 @@
     .price-normal { text-decoration: line-through; color: var(--nexus-text-gray); font-size: 0.9em; display: block; }
     .price-promo { font-weight: bold; color: var(--nexus-danger); }
     .promo-badge { background-color: var(--nexus-danger); color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; margin-left: 5px; vertical-align: middle; }
+    
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 5px; margin-top: 2rem; }
+    .pagination a, .pagination span { display: inline-block; padding: 8px 14px; border-radius: var(--nexus-radius); text-decoration: none; }
+    .pagination a { background-color: white; border: 1px solid #ddd; }
+    .pagination a:hover { background-color: #f5f5f5; }
+    .pagination .active { background-color: var(--nexus-primary); color: white; border: 1px solid var(--nexus-primary); }
+    .pagination .disabled { color: #ccc; background-color: #f9f9f9; border: 1px solid #eee; pointer-events: none; }
 </style>
 
 <div class="container" style="padding-top: 2rem; padding-bottom: 2rem;">
     <h1>Daftar Harga Domain</h1>
-    <p>Temukan harga terbaik untuk registrasi, perpanjangan, dan transfer nama domain Anda.</p>
+    <p>Temukan harga terbaik untuk registrasi, perpanjangan, dan transfer nama domain Anda. Harga di bawah sudah termasuk promo dan penyesuaian dari kami.</p>
     
     <div class="card table-wrapper">
         <table>
@@ -23,6 +30,7 @@
                     <th>Registrasi (1 Tahun)</th>
                     <th>Perpanjangan</th>
                     <th>Transfer</th>
+                    <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -45,8 +53,13 @@
                             </td>
                             <td><strong>Rp <%= parseInt(item.renewal['1']).toLocaleString('id-ID') %></strong></td>
                             <td><strong>Rp <%= parseInt(item.transfer).toLocaleString('id-ID') %></strong></td>
+                            <td>
+                                <a href="/order-domain?domain=domainanda<%= item.domain_extension.extension %>&price=<%= item.final_registration_price %>" class="btn btn-sm btn-primary">Pesan</a>
+                            </td>
                         </tr>
                     <% }) %>
+                <% } else { %>
+                    <tr><td colspan="5" style="text-align: center; padding: 40px;">Gagal memuat daftar harga. Silakan coba lagi nanti.</td></tr>
                 <% } %>
             </tbody>
         </table>
@@ -55,18 +68,10 @@
     <% if (pagination && pagination.last_page > 1) { %>
         <nav class="pagination">
             <%- pagination.links.map(link => {
-                if (!link.url) {
-                    return `<span class="disabled">${link.label.replace('&laquo;', '«').replace('&raquo;', '»')}</span>`;
-                }
+                if (!link.url) return `<span class="disabled">${link.label.replace('&laquo;', '«').replace('&raquo;', '»')}</span>`;
                 const url = new URL(link.url);
                 const page = url.searchParams.get('page');
-                if (link.label.includes('Previous')) {
-                    return `<a href="/domain-pricing?page=${page}">&laquo;</a>`;
-                } else if (link.label.includes('Next')) {
-                    return `<a href="/domain-pricing?page=${page}">&raquo;</a>`;
-                } else {
-                    return `<a href="/domain-pricing?page=${page}" class="${link.active ? 'active' : ''}">${link.label}</a>`;
-                }
+                return `<a href="/domain-pricing?page=${page}" class="${link.active ? 'active' : ''}">${link.label.replace('&laquo;', '«').replace('&raquo;', '»')}</a>`;
             }).join('') %>
         </nav>
     <% } %>
