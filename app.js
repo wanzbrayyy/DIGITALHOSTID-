@@ -48,9 +48,11 @@ const startServer = async () => {
         app.use('/', require('./routes/serviceRoutes'));
         app.use('/', require('./routes/ticketRoutes'));
         app.use('/', require('./routes/affiliateRoutes'));
+        app.use('/', require('./routes/sslRoutes'));
+        app.use('/', require('./routes/billingRoutes'));
         app.use('/admin', require('./routes/adminRoutes'));
+        app.use('/support', require('./routes/supportRoutes'));
         app.use('/api', require('./routes/apiRoutes'));
-        app.use('/', require('./routes/supportRoutes')); 
 
         const PORT = process.env.PORT || 3000;
         app.listen(PORT, () => console.log(`Server berjalan di port ${PORT}`));
