@@ -6,6 +6,10 @@ const userSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    creditBalance: {
+        type: Number,
+        default: 0
+    },
     email: {
         type: String,
         required: true,
