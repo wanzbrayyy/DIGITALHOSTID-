@@ -10,6 +10,7 @@ router.get('/free-domain-request', mainController.getFreeDomainPage);
 router.post('/free-domain-request', mainController.postFreeDomainRequest);
 router.get('/about-us', mainController.getAboutPage);
 router.get('/privacy-policy', mainController.getPolicyPage);
+router.get('/domain-pricing', mainController.getDomainPricingPage);
 router.get('/ssl', mainController.getSslPage);
 router.get('/check-ip', mainController.checkServerIp);
 router.use((req, res, next) => {

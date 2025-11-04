@@ -3,28 +3,50 @@
 <style>
     .table-wrapper { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; }
-    table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--nexus-border-color); }
+    table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--nexus-border-color); white-space: nowrap; }
     table th { font-weight: 600; background-color: #f9fafb; }
     .action-icons a { margin-right: 15px; font-size: 1.2rem; color: var(--nexus-text-gray); }
     .action-icons a:hover { color: var(--nexus-primary-dark); }
     .status-active { color: var(--nexus-success); font-weight: bold; }
     .status-suspended { color: var(--nexus-danger); font-weight: bold; }
+    .status-expired { color: var(--nexus-warning); }
+    
+    .filter-form { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 5px; margin-top: 2rem; }
+    .pagination a, .pagination span { display: inline-block; padding: 8px 14px; border-radius: var(--nexus-radius); text-decoration: none; }
+    .pagination a { background-color: white; border: 1px solid #ddd; }
+    .pagination a:hover { background-color: #f5f5f5; }
+    .pagination .active { background-color: var(--nexus-primary); color: white; border: 1px solid var(--nexus-primary); }
+    .pagination .disabled { color: #ccc; background-color: #f9f9f9; border: 1px solid #eee; pointer-events: none; }
 </style>
 
 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
     <h1>Selamat Datang, <%= user.name.split(' ')[0] %>!</h1>
     <div style="display: flex; gap: 1rem;">
-        <a href="/dashboard/transfer-domain" class="btn btn-secondary">
-            <i class="fas fa-exchange-alt"></i> Transfer Domain
-        </a>
-        <a href="/dashboard/buy-domain" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Beli Domain Baru
-        </a>
+        <a href="/dashboard/transfer-domain" class="btn btn-secondary"><i class="fas fa-exchange-alt"></i> Transfer Domain</a>
+        <a href="/dashboard/buy-domain" class="btn btn-primary"><i class="fas fa-plus"></i> Beli Domain Baru</a>
     </div>
 </div>
 
 <div class="card">
-    <h2><i class="fas fa-globe" style="margin-right: 10px; color: var(--nexus-primary);"></i>Domain Anda</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2><i class="fas fa-globe" style="margin-right: 10px; color: var(--nexus-primary);"></i>Domain Anda</h2>
+        <% if (pagination) { %>
+            <small>Menampilkan <%= pagination.from || 0 %> - <%= pagination.to || 0 %> dari <%= pagination.total %></small>
+        <% } %>
+    </div>
+
+    <form class="filter-form" method="GET" action="/dashboard">
+        <input type="text" name="name" class="form-control" placeholder="Cari nama domain..." value="<%= filters.name || '' %>" style="flex-grow: 1;">
+        <select name="status" class="form-control" style="width: auto;">
+            <option value="">Semua Status</option>
+            <option value="1" <%= filters.status == '1' ? 'selected' : '' %>>Aktif</option>
+            <option value="7" <%= filters.status == '7' ? 'selected' : '' %>>Suspended</option>
+            <option value="2" <%= filters.status == '2' ? 'selected' : '' %>>Expired</option>
+            <option value="0" <%= filters.status == '0' ? 'selected' : '' %>>Pending</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
     
     <div class="table-wrapper">
         <table>
@@ -32,7 +54,8 @@
                 <tr>
                     <th>Nama Domain</th>
                     <th>Status</th>
-                    <th>Kedaluwarsa</th>
+                    <th>Tanggal Registrasi</th>
+                    <th>Tanggal Kedaluwarsa</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -42,28 +65,35 @@
                         <tr>
                             <td><strong><%= domain.name %></strong></td>
                             <td><span class="status-<%= (domain.status_desc || '').toLowerCase() %>"><%= domain.status_desc %></span></td>
-                            <td><%= new Date(domain.expiry_date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) %></td>
+                            <td><%= new Date(domain.created_at).toLocaleDateString('id-ID') %></td>
+                            <td><%= new Date(domain.expiry_date).toLocaleDateString('id-ID') %></td>
                             <td class="action-icons">
-                                <a href="/dashboard/domain/<%= domain.id %>/manage" title="Kelola Domain">
-                                    <i class="fas fa-cog"></i>
-                                </a>
-                                <a href="/dashboard/domain/<%= domain.id %>/dns" title="DNS Manager">
-                                    <i class="fas fa-dns"></i>
-                                </a>
+                                <a href="/dashboard/domain/<%= domain.id %>/manage" title="Kelola Domain"><i class="fas fa-cog"></i></a>
+                                <a href="/dashboard/domain/<%= domain.id %>/dns" title="DNS Manager"><i class="fas fa-dns"></i></a>
                             </td>
                         </tr>
                     <% }) %>
                 <% } else { %>
-                    <tr>
-                        <td colspan="4" style="padding: 20px; text-align: center;">
-                            Anda belum memiliki domain. <br>
-                            <a href="/dashboard/buy-domain" style="margin-top: 1rem; display: inline-block;">Daftarkan domain pertama Anda sekarang!</a>
-                        </td>
-                    </tr>
+                    <tr><td colspan="5" style="padding: 40px; text-align: center;">Tidak ada domain yang cocok dengan filter Anda, atau Anda belum memiliki domain.</td></tr>
                 <% } %>
             </tbody>
         </table>
     </div>
+
+    <% if (pagination && pagination.last_page > 1) { %>
+        <nav class="pagination">
+            <%- pagination.links.map(link => {
+                let newUrl = link.url ? link.url.replace('/domains?', '/dashboard?') : '#';
+                if (link.label.includes('Previous')) {
+                    return `<a href="${newUrl}" class="${!link.url ? 'disabled' : ''}">&laquo;</a>`;
+                } else if (link.label.includes('Next')) {
+                    return `<a href="${newUrl}" class="${!link.url ? 'disabled' : ''}">&raquo;</a>`;
+                } else {
+                    return `<a href="${newUrl}" class="${link.active ? 'active' : ''}">${link.label}</a>`;
+                }
+            }).join('') %>
+        </nav>
+    <% } %>
 </div>
 
-<%- include('../partials/footer') %>```
+<%- include('../partials/footer') %>

@@ -1,0 +1,75 @@
+<%- include('partials/header', { title: title }) %>
+
+<style>
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--nexus-border-color); white-space: nowrap; }
+    table th { font-weight: 600; background-color: #f9fafb; }
+    
+    .price-normal { text-decoration: line-through; color: var(--nexus-text-gray); font-size: 0.9em; display: block; }
+    .price-promo { font-weight: bold; color: var(--nexus-danger); }
+    .promo-badge { background-color: var(--nexus-danger); color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; margin-left: 5px; vertical-align: middle; }
+</style>
+
+<div class="container" style="padding-top: 2rem; padding-bottom: 2rem;">
+    <h1>Daftar Harga Domain</h1>
+    <p>Temukan harga terbaik untuk registrasi, perpanjangan, dan transfer nama domain Anda.</p>
+    
+    <div class="card table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ekstensi Domain</th>
+                    <th>Registrasi (1 Tahun)</th>
+                    <th>Perpanjangan</th>
+                    <th>Transfer</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (prices && prices.length > 0) { %>
+                    <% prices.forEach(item => { %>
+                        <tr>
+                            <td>
+                                <strong><%= item.domain_extension.extension %></strong>
+                                <% if (item.has_promo_or_override) { %>
+                                    <span class="promo-badge">PROMO</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <% if (item.final_registration_price < parseInt(item.registration['1'])) { %>
+                                    <span class="price-promo">Rp <%= item.final_registration_price.toLocaleString('id-ID') %></span>
+                                    <span class="price-normal">Rp <%= parseInt(item.registration['1']).toLocaleString('id-ID') %></span>
+                                <% } else { %>
+                                    <strong>Rp <%= item.final_registration_price.toLocaleString('id-ID') %></strong>
+                                <% } %>
+                            </td>
+                            <td><strong>Rp <%= parseInt(item.renewal['1']).toLocaleString('id-ID') %></strong></td>
+                            <td><strong>Rp <%= parseInt(item.transfer).toLocaleString('id-ID') %></strong></td>
+                        </tr>
+                    <% }) %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+
+    <% if (pagination && pagination.last_page > 1) { %>
+        <nav class="pagination">
+            <%- pagination.links.map(link => {
+                if (!link.url) {
+                    return `<span class="disabled">${link.label.replace('&laquo;', '«').replace('&raquo;', '»')}</span>`;
+                }
+                const url = new URL(link.url);
+                const page = url.searchParams.get('page');
+                if (link.label.includes('Previous')) {
+                    return `<a href="/domain-pricing?page=${page}">&laquo;</a>`;
+                } else if (link.label.includes('Next')) {
+                    return `<a href="/domain-pricing?page=${page}">&raquo;</a>`;
+                } else {
+                    return `<a href="/domain-pricing?page=${page}" class="${link.active ? 'active' : ''}">${link.label}</a>`;
+                }
+            }).join('') %>
+        </nav>
+    <% } %>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,27 +1,45 @@
 const domainService = require('../services/domainService');
 const User = require('../models/user');
-
 exports.getDashboard = async (req, res) => {
     try {
         const user = await User.findById(req.session.user.id);
         if (!user) {
-            return req.session.destroy(() => {
-                res.redirect('/login');
-            });
+            return req.session.destroy(() => { res.redirect('/login'); });
         }
 
-        const domainsResponse = await domainService.listDomains({ customer_id: user.customerId });
+        // Ambil query dari URL (misal: ?page=2&status=1)
+        const { page, status, name } = req.query;
+
+        // Siapkan parameter untuk API
+        const apiParams = {
+            customer_id: user.customerId,
+            page: page || 1,
+            limit: 10, // Tampilkan 10 domain per halaman
+            'f_params[orderBy][field]': 'expiry_date',
+            'f_params[orderBy][type]': 'asc'
+        };
+
+        // Tambahkan filter jika ada
+        if (status) apiParams.status = status;
+        if (name) apiParams.name = name;
+        
+        const domainsResponse = await domainService.listDomains(apiParams);
         
         res.render('dashboard/index', {
             user: user, 
             domains: domainsResponse.data || [],
+            pagination: domainsResponse.meta, // Kirim data meta untuk pagination
+            filters: { status, name }, // Kirim filter saat ini untuk ditampilkan di form
             title: 'Dashboard'
         });
     } catch (error) {
+        console.error("ERROR di getDashboard:", error);
         req.flash('error_msg', `Gagal memuat data domain: ${error.message}`);
         res.render('dashboard/index', { 
             user: req.session.user, 
             domains: [], 
+            pagination: null,
+            filters: {},
             title: 'Dashboard' 
         });
     }

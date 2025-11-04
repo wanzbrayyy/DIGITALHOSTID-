@@ -21,27 +21,21 @@
         background: linear-gradient(45deg, rgba(142, 68, 173, 0.8), rgba(31, 29, 43, 0.9));
         z-index: -1;
     }
-    .promo-banner {
-        background: linear-gradient(45deg, var(--nexus-primary), var(--nexus-primary-dark));
-        color: white;
-        text-align: center;
-        padding: 2rem;
-        border-radius: var(--nexus-radius);
-        margin: 4rem auto;
-        box-shadow: 0 10px 30px rgba(130, 170, 255, 0.3);
-    }
-    .domain-search-section { padding: 60px 0; }
+   .promo-banner { background: linear-gradient(45deg, var(--nexus-primary), var(--nexus-primary-dark)); color: white; text-align: center; padding: 2rem; border-radius: var(--nexus-radius); margin: 4rem auto; box-shadow: 0 10px 30px rgba(130, 170, 255, 0.3); }
     #domain-search-form { display: flex; max-width: 700px; margin: 0 auto; box-shadow: var(--nexus-shadow); border-radius: 50px; }
     #domain-input { flex-grow: 1; padding: 18px 25px; border: 2px solid transparent; font-size: 1rem; border-radius: 50px 0 0 50px; outline: none; }
     #domain-search-button { padding: 18px 35px; border-radius: 0 50px 50px 0; background: var(--nexus-secondary); color: white; border: none; cursor: pointer; font-size: 1rem; font-weight: 600; }
     #domain-results { margin-top: 35px; max-width: 700px; margin-left: auto; margin-right: auto; }
     .suggestion-item { background: white; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-radius: var(--nexus-radius); box-shadow: var(--nexus-shadow); margin-bottom: 12px; }
-    .status-available { color: var(--nexus-success); font-weight: 600; } .status-taken { color: var(--nexus-text-gray); }
-    .pricing-section { padding: 60px 0; background-color: white; }
-    .pricing-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding: 1rem 1rem 2rem 1rem; margin: 0 -1rem; } .pricing-grid::-webkit-scrollbar { display: none; }
-    .pricing-card { scroll-snap-align: center; flex: 0 0 280px; margin: 0 15px; background: #f9fafb; border-radius: 16px; padding: 30px; border: 1px solid #eee; text-align: left; transition: all 0.3s ease; display: flex; flex-direction: column; }
-    .pricing-card:hover { transform: translateY(-10px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); border-color: var(--nexus-primary); }
-    .pricing-card div:first-of-type { font-size: 2.5rem; font-weight: 700; margin-bottom: 1.5rem; } .pricing-card ul { list-style: none; padding: 0; } .pricing-card ul li { margin-bottom: 0.5rem; }
+    
+    .domain-pricing-homepage { padding: 60px 0; }
+    .domain-pricing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
+    .domain-price-card { text-align: center; padding: 1.5rem 1rem; border-radius: var(--nexus-radius); border: 1px solid #eee; transition: all 0.3s ease; }
+    .domain-price-card:hover { transform: translateY(-5px); box-shadow: var(--nexus-shadow); border-color: var(--nexus-primary); }
+    .domain-price-card .tld { font-size: 1.5rem; font-weight: 700; color: var(--nexus-text-dark); }
+    .domain-price-card .price { font-size: 1.2rem; font-weight: 600; color: var(--nexus-primary-dark); margin: 0.5rem 0; }
+    .domain-price-card .original-price { font-size: 0.9rem; color: var(--nexus-text-gray); text-decoration: line-through; }
+    .domain-price-card.promo { border-left: 4px solid var(--nexus-danger); }
 </style>
 
 <main>
@@ -56,8 +50,7 @@
     <div class="container">
         <% if (typeof promo !== 'undefined' && promo && promo.isActive) { %>
             <section class="promo-banner">
-                <h3 style="margin-bottom: 0.5rem;"><%= promo.title %></h3>
-                <p><%= promo.message %></p>
+                <h3><%= promo.title %></h3><p><%= promo.message %></p>
                 <% if (promo.link) { %><a href="<%= promo.link %>" class="btn" style="margin-top: 1rem; background: white; color: var(--nexus-primary-dark);">Lihat Selengkapnya</a><% } %>
             </section>
         <% } %>
@@ -71,6 +64,28 @@
                 <button type="submit" id="domain-search-button"><i class="fas fa-search"></i> Cari</button>
             </form>
             <div id="domain-results"></div>
+        </div>
+    </section>
+
+    <section class="domain-pricing-homepage">
+        <div class="container">
+            <h2 style="text-align: center; margin-bottom: 2rem;">Promo Domain Terpopuler</h2>
+            <div class="domain-pricing-grid">
+                <% if (domainPrices && domainPrices.length > 0) { %>
+                    <% domainPrices.forEach(item => { %>
+                        <div class="domain-price-card <%= item.hasPromo ? 'promo' : '' %>">
+                            <div class="tld"><%= item.extension %></div>
+                            <div class="price">Rp <%= item.price.toLocaleString('id-ID') %></div>
+                            <% if (item.price < item.originalPrice) { %>
+                                <div class="original-price">Rp <%= item.originalPrice.toLocaleString('id-ID') %></div>
+                            <% } %>
+                        </div>
+                    <% }) %>
+                <% } %>
+            </div>
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="/domain-pricing" class="btn btn-secondary">Lihat Semua Harga Domain</a>
+            </div>
         </div>
     </section>
 

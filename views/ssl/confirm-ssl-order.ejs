@@ -1,46 +1,71 @@
 <%- include('../partials/header', { title: title }) %>
 
+<style>
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .summary-item:last-child {
+        border-bottom: none;
+    }
+    .btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+</style>
+
 <h1>Konfirmasi Pesanan SSL</h1>
 <p>Harap periksa kembali detail pesanan Anda sebelum menyelesaikan proses.</p>
 
 <div class="grid-2">
     <div class="card">
         <h3>Detail Produk</h3>
-        <p><strong>Produk:</strong> <%= product.name %></p>
-        <p><strong>Brand:</strong> <%= product.brand %></p>
-        <p><strong>Domain:</strong> <%= csr.name %></p>
-        <p><strong>Harga:</strong> Rp <%= (product.price).toLocaleString('id-ID') %>/Tahun</p>
+        <div class="summary-item"><span>Produk:</span> <strong><%= product.name %></strong></div>
+        <div class="summary-item"><span>Brand:</span> <strong><%= product.brand %></strong></div>
+        <div class="summary-item"><span>Domain:</span> <strong><%= (csr && csr.name) ? csr.name : 'N/A' %></strong></div>
+        <div class="summary-item"><span>Harga:</span> <strong>Rp <%= displayPrice.toLocaleString('id-ID') %>/Tahun</strong></div>
     </div>
     <div class="card">
         <h3>Kontak Administratif & Teknis</h3>
-        <p>Informasi di bawah diambil dari profil Anda.</p>
-        <p><strong>Nama:</strong> <%= user.name %></p>
-        <p><strong>Email:</strong> <%= user.email %></p>
-        <p><strong>Telepon:</strong> <%= user.voice %></p>
+        <p style="font-size: 0.9rem; color: var(--nexus-text-gray);">Informasi di bawah ini diambil secara otomatis dari data profil Anda.</p>
+        <div class="summary-item"><span>Nama:</span> <strong><%= user.name %></strong></div>
+        <div class="summary-item"><span>Email:</span> <strong><%= user.email %></strong></div>
+        <div class="summary-item"><span>Telepon:</span> <strong><%= user.voice %></strong></div>
     </div>
 </div>
 
 <div class="card">
     <h3>Konfigurasi & Validasi</h3>
-    <form action="/ssl/order/<%= product.id %>/confirm" method="POST">
-        <input type="hidden" name="csr_code" value="<%= csr.csr %>">
+    <form action="/ssl/order/<%= price_id %>/confirm" method="POST">
+        <input type="hidden" name="csr_code" value="<%= (csr && csr.csr) ? csr.csr : '' %>">
         
         <div class="form-group">
             <label for="dcv_method">Metode Validasi Domain (DCV)</label>
             <select name="dcv_method" id="dcv_method" class="form-control" required>
-                <option value="http">HTTP (Upload File)</option>
-                <option value="dns">DNS (CNAME Record)</option>
-                <option value="email">Email</option>
+                <option value="" disabled selected>-- Pilih Metode Validasi --</option>
+                <option value="http">HTTP (Upload File ke Server)</option>
+                <option value="dns">DNS (Membuat CNAME Record)</option>
+                <option value="email">Email (Menerima email validasi)</option>
             </select>
-            <small>Pastikan Anda memiliki akses ke salah satu metode di atas untuk domain <%= csr.name %>.</small>
+            <small>Pastikan Anda memiliki akses ke salah satu metode di atas untuk domain <strong><%= (csr && csr.name) ? csr.name : 'Anda' %></strong>.</small>
         </div>
 
         <div class="form-group">
             <label>Certificate Signing Request (CSR)</label>
-            <textarea class="form-control" rows="5" readonly><%= csr.csr %></textarea>
+            <textarea class="form-control" rows="6" readonly><%= (csr && csr.csr) ? csr.csr : 'Gagal membuat CSR. Silakan kembali dan coba lagi.' %></textarea>
+            <small>Ini adalah kode CSR yang dihasilkan untuk pesanan Anda.</small>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%;">Selesaikan Pesanan</button>
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1.1rem;" <%= !(csr && csr.csr) ? 'disabled' : '' %>>
+            <i class="fas fa-check-circle"></i> Selesaikan Pesanan & Aktifkan SSL
+        </button>
     </form>
 </div>
 

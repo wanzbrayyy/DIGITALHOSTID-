@@ -216,15 +216,21 @@ exports.getSettingsHargaPage = async (req, res) => {
         let settings = await Setting.findOne();
         if (!settings) settings = await new Setting().save();
         
-        // **PERBAIKAN: Gunakan fungsi yang benar**
         const sslApiResponse = await domainService.listSslProductsWithPrices();
+
+        const displayTldPrices = {};
+        if (settings.prices.tld) {
+            for (const [key, value] of settings.prices.tld.entries()) {
+                displayTldPrices[key.replace(/_/g, '.')] = value;
+            }
+        }
 
         res.render('admin/settings-harga', {
             user: req.session.user,
             whoisPrice: settings.prices.whois,
-            tldPrices: Object.fromEntries(settings.prices.tld),
-            sslPrices: Object.fromEntries(settings.prices.ssl),
-            sslApiProducts: sslApiResponse.data,
+            tldPrices: displayTldPrices,
+            sslPrices: Object.fromEntries(settings.prices.ssl || new Map()),
+            sslApiProducts: sslApiResponse.data || [],
             title: 'Pengaturan Harga'
         });
     } catch (error) {
@@ -236,6 +242,7 @@ exports.getSettingsHargaPage = async (req, res) => {
 exports.updateSettingsHarga = async (req, res) => {
     try {
         const { setting_type } = req.body;
+        
         let settings = await Setting.findOne();
         if (!settings) {
             settings = new Setting();
@@ -246,10 +253,12 @@ exports.updateSettingsHarga = async (req, res) => {
                 settings.prices.whois = req.body.whois_price;
                 break;
             case 'tld':
-                settings.prices.tld.set(req.body.tld, req.body.price);
+                const safeTldKey = req.body.tld.replace(/\./g, '_');
+                settings.prices.tld.set(safeTldKey, req.body.price);
                 break;
             case 'tld_remove':
-                settings.prices.tld.delete(req.body.remove_tld);
+                const keyToDelete = req.body.remove_tld.replace(/\./g, '_');
+                settings.prices.tld.delete(keyToDelete);
                 break;
             case 'ssl':
                 if (req.body.ssl_prices) {
@@ -266,6 +275,7 @@ exports.updateSettingsHarga = async (req, res) => {
     }
     res.redirect('/admin/settings-harga');
 };
+
 exports.getFreeDomainRequests = async (req, res) => {
     try {
         const requests = await FreeDomainRequest.find().sort({ createdAt: -1 });

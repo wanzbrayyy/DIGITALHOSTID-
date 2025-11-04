@@ -1,9 +1,10 @@
 const axios = require('axios');
 const logger = require('../utils/logger');
+const { URLSearchParams } = require('url');
 
 const apiClient = axios.create({
     baseURL: process.env.RDASH_API_URL,
-    timeout: 15000,
+    timeout: 20000,
     auth: {
         username: process.env.RDASH_API_USERNAME,
         password: process.env.RDASH_API_PASSWORD
@@ -11,47 +12,122 @@ const apiClient = axios.create({
 });
 
 const handleApiError = (error, functionName) => {
+    if (error.code === 'ECONNABORTED') {
+        const timeoutError = `API TIMEOUT in ${functionName}: ${error.message}`;
+        console.error(timeoutError);
+        logger.error(timeoutError);
+        throw new Error('Koneksi ke API gateway timeout. Silakan coba lagi nanti.');
+    }
+
     const errorData = {
         message: error.message,
-        responseData: error.response ? error.response.data : 'No response data',
-        status: error.response ? error.response.status : 'No response status'
+        responseData: error.response?.data,
+        status: error.response?.status
     };
+    
+    console.error(`RAW API ERROR in ${functionName}:`, JSON.stringify(error.response?.data, null, 2));
     logger.error(`API ERROR in ${functionName}`, errorData);
-    if (error.code === 'ECONNABORTED') throw new Error('Koneksi ke API gateway timeout.');
-    const apiErrorMessage = error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join(' ') : error.response?.data?.message;
+    
+    const apiErrorMessage = error.response?.data?.errors 
+        ? Object.values(error.response.data.errors).flat().join(' ') 
+        : error.response?.data?.message;
+        
     throw new Error(apiErrorMessage || 'Terjadi kesalahan pada server API.');
 };
 
-const createCustomer = async (customerData) => { try { const response = await apiClient.post('/customers', customerData); return response.data; } catch (error) { handleApiError(error, 'createCustomer'); }};
-const showCustomer = async (customerId) => { try { const response = await apiClient.get(`/customers/${customerId}`); return response.data; } catch (error) { handleApiError(error, 'showCustomer'); }};
-const updateCustomer = async (customerId, customerData) => { try { const response = await apiClient.put(`/customers/${customerId}`, customerData); return response.data; } catch (error) { handleApiError(error, 'updateCustomer'); }};
-const listDomains = async (params = {}) => { try { const response = await apiClient.get('/domains', { params }); return response.data; } catch (error) { handleApiError(error, 'listDomains'); }};
-const registerDomain = async (domainData) => { try { const response = await apiClient.post('/domains', domainData); return response.data; } catch (error) { handleApiError(error, 'registerDomain'); }};
-const transferDomain = async (transferData) => { try { const response = await apiClient.post('/domains/transfer', transferData); return response.data; } catch (error) { handleApiError(error, 'transferDomain'); }};
-const showDomainById = async (domainId) => { try { const response = await apiClient.get(`/domains/${domainId}`); return response.data; } catch (error) { handleApiError(error, 'showDomainById'); }};
-const resendVerificationEmail = async (domainId) => { try { const response = await apiClient.post(`/domains/${domainId}/verification/resend`); return response.data; } catch (error) { handleApiError(error, 'resendVerificationEmail'); }};
-const lockDomain = async (domainId, reason = '') => { try { const response = await apiClient.put(`/domains/${domainId}/locked`, { reason }); return response.data; } catch (error) { handleApiError(error, 'lockDomain'); }};
-const unlockDomain = async (domainId) => { try { const response = await apiClient.delete(`/domains/${domainId}/locked`); return response.data; } catch (error) { handleApiError(error, 'unlockDomain'); }};
-const suspendDomain = async (domainId, reason, type = 2) => { try { const response = await apiClient.put(`/domains/${domainId}/suspended`, { type, reason }); return response.data; } catch (error) { handleApiError(error, 'suspendDomain'); }};
-const unsuspendDomain = async (domainId) => { try { const response = await apiClient.delete(`/domains/${domainId}/suspended`); return response.data; } catch (error) { handleApiError(error, 'unsuspendDomain'); }};
-const getDnsRecords = async (domainId) => { try { const response = await apiClient.get(`/domains/${domainId}/dns`); return response.data; } catch (error) { handleApiError(error, 'getDnsRecords'); }};
-const createDnsRecord = async (domainId, recordData) => { try { const response = await apiClient.put(`/domains/${domainId}/dns`, recordData); return response.data; } catch (error) { handleApiError(error, 'createDnsRecord'); }};
-const deleteDnsRecord = async (domainId, recordData) => { try { const response = await apiClient.delete(`/domains/${domainId}/dns/record`, { data: recordData }); return response.data; } catch (error) { handleApiError(error, 'deleteDnsRecord'); }};
-const checkDomainAvailability = async (domain) => { try { const response = await apiClient.get('/domains/availability', { params: { domain } }); const result = response.data?.data?.[0]; if (!result) throw new Error('Invalid API response'); return { name: result.name, status: result.available === 1 ? 'available' : 'taken' }; } catch (error) { handleApiError(error, 'checkDomainAvailability'); }};
+// --- HELPER FUNCTIONS (JANGAN DIUBAH) ---
+const get = async (url, params = {}, functionName) => {
+    try {
+        const response = await apiClient.get(url, { params });
+        return response.data;
+    } catch (error) {
+        handleApiError(error, functionName);
+    }
+};
 
-// **FUNGSI SSL YANG BENAR**
-const listSslProductsWithPrices = async (params = {}) => { try { const response = await apiClient.get('/ssl/prices', { params }); return response.data; } catch (error) { handleApiError(error, 'listSslProductsWithPrices'); }};
-const showSslProductWithPrice = async (productId) => { try { const response = await apiClient.get('/ssl/prices', { params: { id: productId, limit: 1 } }); return response.data.data[0]; } catch (error) { handleApiError(error, 'showSslProductWithPrice'); }};
-const generateCsr = async (csrData) => { try { const response = await apiClient.post('/ssl/csr/generate', new URLSearchParams(csrData)); return response.data; } catch (error) { handleApiError(error, 'generateCsr'); }};
-const orderSsl = async (orderData) => { try { const response = await apiClient.post('/ssl/orders', new URLSearchParams(orderData)); return response.data; } catch (error) { handleApiError(error, 'orderSsl'); }};
+const post = async (url, data, functionName) => {
+    try {
+        const params = new URLSearchParams(Object.entries(data).filter(([_, v]) => v != null));
+        const response = await apiClient.post(url, params);
+        return response.data;
+    } catch (error) {
+        handleApiError(error, functionName);
+    }
+};
+
+const put = async (url, data, functionName) => {
+    try {
+        const params = new URLSearchParams(Object.entries(data).filter(([_, v]) => v != null));
+        const response = await apiClient.put(url, params);
+        return response.data;
+    } catch (error) {
+        handleApiError(error, functionName);
+    }
+};
+
+const del = async (url, data = {}, functionName) => {
+    try {
+        const response = await apiClient.delete(url, { data: new URLSearchParams(data) });
+        return response.data;
+    } catch (error) {
+        handleApiError(error, functionName);
+    }
+};
+
+// --- CUSTOMER FUNCTIONS ---
+const createCustomer = (data) => post('/customers', data, 'createCustomer');
+const showCustomer = (id) => get(`/customers/${id}`, {}, 'showCustomer');
+const updateCustomer = (id, data) => put(`/customers/${id}`, data, 'updateCustomer');
+
+// --- DOMAIN FUNCTIONS ---
+const listDomains = (params) => get('/domains', params, 'listDomains');
+const registerDomain = (data) => post('/domains', data, 'registerDomain');
+const transferDomain = (data) => post('/domains/transfer', data, 'transferDomain');
+const showDomainById = (id) => get(`/domains/${id}`, {}, 'showDomainById');
+const resendVerificationEmail = (id) => post(`/domains/${id}/verification/resend`, {}, 'resendVerificationEmail');
+const lockDomain = (id, reason = '') => put(`/domains/${id}/locked`, { reason }, 'lockDomain');
+const unlockDomain = (id) => del(`/domains/${id}/locked`, {}, 'unlockDomain');
+const suspendDomain = (id, reason) => put(`/domains/${id}/suspended`, { type: 2, reason }, 'suspendDomain');
+const unsuspendDomain = (id) => del(`/domains/${id}/suspended`, {}, 'unsuspendDomain');
+const checkDomainAvailability = async (domain) => {
+    try {
+        const response = await get('/domains/availability', { domain }, 'checkDomainAvailability');
+        const result = response?.data?.[0];
+        if (!result) throw new Error('Invalid API response');
+        return { name: result.name, status: result.available === 1 ? 'available' : 'taken' };
+    } catch (error) {
+        handleApiError(error, 'checkDomainAvailability');
+    }
+};
+
+// --- DNS FUNCTIONS ---
+const getDnsRecords = (id) => get(`/domains/${id}/dns`, {}, 'getDnsRecords');
+const createDnsRecord = (id, data) => put(`/domains/${id}/dns`, data, 'createDnsRecord');
+const deleteDnsRecord = (id, data) => del(`/domains/${id}/dns/record`, data, 'deleteDnsRecord');
+
+// --- SSL FUNCTIONS ---
+const listSslProductsWithPrices = (params) => get('/ssl/prices', params, 'listSslProductsWithPrices');
+const showSslProductWithPrice = async (priceId) => {
+    try {
+        const response = await listSslProductsWithPrices({ limit: 100 });
+        const foundProduct = response.data.find(item => item.id === parseInt(priceId, 10));
+        if (!foundProduct) throw new Error(`Produk SSL dengan ID harga ${priceId} tidak ditemukan.`);
+        return foundProduct; 
+    } catch (error) { 
+        handleApiError(error, 'showSslProductWithPrice'); 
+    }
+};
+const generateCsr = (data) => post('/ssl/csr/generate', data, 'generateCsr');
+const orderSsl = (data) => post('/ssl/orders', data, 'orderSsl');
+
+// --- ACCOUNT FUNCTIONS ---
+const listAllDomainPrices = (params) => get('/account/prices', params, 'listAllDomainPrices');
 
 module.exports = {
-    createCustomer, showCustomer, updateCustomer, listDomains, registerDomain, checkDomainAvailability,
-    transferDomain, showDomainById, resendVerificationEmail, lockDomain, unlockDomain,
-    suspendDomain, unsuspendDomain, getDnsRecords, createDnsRecord, deleteDnsRecord,
-    // **EKSPOR FUNGSI SSL YANG BENAR**
-    listSslProductsWithPrices,
-    showSslProductWithPrice,
-    generateCsr,
-    orderSsl
+    createCustomer, showCustomer, updateCustomer,
+    listDomains, registerDomain, transferDomain, showDomainById, resendVerificationEmail,
+    lockDomain, unlockDomain, suspendDomain, unsuspendDomain, checkDomainAvailability,
+    getDnsRecords, createDnsRecord, deleteDnsRecord,
+    listSslProductsWithPrices, showSslProductWithPrice, generateCsr, orderSsl,
+    listAllDomainPrices
 };

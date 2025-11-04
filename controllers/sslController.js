@@ -4,39 +4,60 @@ const Setting = require('../models/setting');
 
 exports.getOrderPage = async (req, res) => {
     try {
-        const product = await domainService.showSslProductWithPrice(req.params.productId);
-        if (!product) {
+        const priceItem = await domainService.showSslProductWithPrice(req.params.priceId);
+        if (!priceItem) {
             req.flash('error_msg', 'Produk SSL tidak ditemukan.');
             return res.redirect('/ssl');
         }
+        
         res.render('ssl/order-ssl', {
             user: req.session.user,
-            product,
-            title: `Pesan ${product.name}`
+            product: priceItem.product,
+            price_id: priceItem.id,
+            title: `Pesan ${priceItem.product.name}`
         });
     } catch (error) {
         req.flash('error_msg', `Gagal memuat halaman pesanan: ${error.message}`);
         res.redirect('/ssl');
     }
 };
-
 exports.generateCsrAndConfirm = async (req, res) => {
     try {
         const user = await User.findById(req.session.user.id);
-        const product = await domainService.showSslProductWithPrice(req.params.productId);
+        const priceItem = await domainService.showSslProductWithPrice(req.params.priceId);
+        
+        const settings = await Setting.findOne() || new Setting();
+        const sslPriceOverrides = settings.prices.ssl;
+        const overridePrice = sslPriceOverrides.get(priceItem.product.name);
+        const displayPrice = overridePrice || parseFloat(priceItem['1']);
 
-        const csrData = { ...req.body, csr_country: 'ID' }; // Sesuaikan csr_country
+        const csrData = { 
+            ssl_product_id: priceItem.product.id,
+            csr_country: user.country_code || 'ID',
+            ...req.body 
+        };
         const csrResponse = await domainService.generateCsr(csrData);
+
+        if (!csrResponse || !csrResponse.data || !csrResponse.data.csr) {
+            throw new Error('API tidak mengembalikan CSR yang valid.');
+        }
 
         res.render('ssl/confirm-ssl-order', {
             user: user,
-            product,
+            product: priceItem.product,
+            price_id: priceItem.id,
+            displayPrice: displayPrice,
             csr: csrResponse.data,
             title: 'Konfirmasi Pesanan SSL'
         });
     } catch (error) {
+        // **JEBAKAN DEBUGGING DI SINI**
+        console.error("--- ERROR DITANGKAP OLEH SSL CONTROLLER ---");
+        console.error(error);
+        console.error("-----------------------------------------");
+        
         req.flash('error_msg', `Gagal membuat CSR: ${error.message}`);
-        res.redirect(`/ssl/order/${req.params.productId}`);
+        res.redirect(`/ssl/order/${req.params.priceId}`);
     }
 };
 
@@ -44,6 +65,7 @@ exports.processSslOrder = async (req, res) => {
     try {
         const { csr_code, dcv_method } = req.body;
         const user = await User.findById(req.session.user.id);
+        const priceItem = await domainService.showSslProductWithPrice(req.params.priceId);
         
         const contactDetails = {
             firstname: user.name.split(' ')[0],
@@ -59,40 +81,22 @@ exports.processSslOrder = async (req, res) => {
         };
         
         const orderData = {
-            ssl_product_id: req.params.productId,
+            ssl_product_id: priceItem.product.id,
             customer_id: user.customerId,
             dcv_method,
             period: 12,
             csr_code,
-            admin_firstname: contactDetails.firstname,
-            admin_lastname: contactDetails.lastname,
-            admin_organization: contactDetails.organization,
-            admin_address: contactDetails.address,
-            admin_phone: contactDetails.phone,
-            admin_title: contactDetails.title,
-            admin_email: contactDetails.email,
-            admin_city: contactDetails.city,
-            admin_country: contactDetails.country,
-            admin_postal_code: contactDetails.postal_code,
-            tech_firstname: contactDetails.firstname,
-            tech_lastname: contactDetails.lastname,
-            tech_organization: contactDetails.organization,
-            tech_address: contactDetails.address,
-            tech_phone: contactDetails.phone,
-            tech_title: contactDetails.title,
-            tech_email: contactDetails.email,
-            tech_city: contactDetails.city,
-            tech_country: contactDetails.country,
-            tech_postal_code: contactDetails.postal_code,
+            ...Object.fromEntries(Object.entries(contactDetails).map(([k, v]) => [`admin_${k}`, v])),
+            ...Object.fromEntries(Object.entries(contactDetails).map(([k, v]) => [`tech_${k}`, v])),
         };
 
         await domainService.orderSsl(orderData);
         
-        req.flash('success_msg', 'Pesanan SSL Anda telah berhasil dibuat dan sedang diproses.');
+        req.flash('success_msg', 'Pesanan SSL Anda telah berhasil dibuat dan sedang diproses. Silakan selesaikan validasi domain.');
         res.redirect('/dashboard');
 
     } catch (error) {
         req.flash('error_msg', `Gagal memproses pesanan SSL: ${error.message}`);
-        res.redirect(`/ssl/order/${req.params.productId}`);
+        res.redirect(`/ssl/order/${req.params.priceId}`);
     }
 };

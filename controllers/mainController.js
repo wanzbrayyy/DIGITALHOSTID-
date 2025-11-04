@@ -10,17 +10,119 @@ exports.getHomePage = async (req, res) => {
     try {
         const products = await Product.find({ isFeatured: true });
         const promo = await Promo.findOne({ isActive: true });
+        
+        const priceData = await domainService.listAllDomainPrices({ promo: true, limit: 6 });
+        
+        const settings = await Setting.findOne() || new Setting();
+        const tldPriceOverrides = settings.prices.tld;
+
+        const domainPrices = priceData.data
+            // **PERBAIKAN YANG SAMA DITERAPKAN DI SINI**
+            .filter(item => item && item.domain_extension && item.registration)
+            .map(item => {
+                const extensionWithDot = item.domain_extension.extension;
+                const safeTldKey = extensionWithDot.substring(1).replace(/\./g, '_');
+            
+                const overridePrice = tldPriceOverrides.get(safeTldKey);
+                const apiPromoPrice = item.promo_registration.registration['1'];
+                const apiNormalPrice = item.registration['1'];
+            
+                let displayPrice = apiNormalPrice;
+                if (apiPromoPrice) {
+                    displayPrice = apiPromoPrice;
+                }
+                if (overridePrice) {
+                    displayPrice = overridePrice;
+                }
+
+                return {
+                    extension: item.domain_extension.extension,
+                    price: parseInt(displayPrice),
+                    originalPrice: parseInt(apiNormalPrice),
+                    hasPromo: !!apiPromoPrice || (overridePrice && overridePrice < apiNormalPrice)
+                };
+            });
+
         res.render('index', { 
             user: req.session.user, 
             products,
             promo,
+            domainPrices,
             title: 'Domain, Hosting, & SSL Murah',
-            description: 'DigitalHostID adalah penyedia layanan daftar domain, hosting cepat, dan sertifikat SSL terpercaya di Indonesia.',
+            description: 'DigitalHostID adalah penyedia layanan registrasi domain, hosting cepat, dan sertifikat SSL terpercaya di Indonesia.',
             keywords: 'domain, hosting, ssl, web hosting, domain murah, hosting indonesia',
             canonicalUrl: process.env.APP_BASE_URL + '/'
         });
     } catch (error) {
-        res.render('index', { user: req.session.user, products: [], promo: null, title: 'Error' });
+        console.error("ERROR di getHomePage:", error);
+        res.render('index', { 
+            user: req.session.user, 
+            products: [], 
+            promo: null, 
+            domainPrices: []
+        });
+    }
+};
+
+exports.getDomainPricingPage = async (req, res) => {
+    try {
+        const { page } = req.query;
+        const apiParams = { page: page || 1, limit: 10 };
+        
+        const priceData = await domainService.listAllDomainPrices(apiParams);
+        const settings = await Setting.findOne() || new Setting();
+        const tldPriceOverrides = settings.prices.tld;
+
+        const processedPrices = priceData.data
+            .filter(item => 
+                item && 
+                item.registration && 
+                item.registration['1'] && 
+                item.renewal && 
+                item.renewal['1'] &&
+                item.domain_extension
+            )
+            .map(item => {
+                const extensionWithDot = item.domain_extension.extension;
+                const safeTldKey = extensionWithDot.substring(1).replace(/\./g, '_');
+                const overridePrice = tldPriceOverrides.get(safeTldKey);
+                
+                // **PERBAIKAN UTAMA ADA DI SINI**
+                // Cek keberadaan promo_registration sebelum mengaksesnya
+                const apiPromoPrice = (item.promo_registration && item.promo_registration.registration) 
+                                      ? item.promo_registration.registration['1'] 
+                                      : null;
+
+                const apiNormalPrice = item.registration['1'];
+
+                let finalRegPrice = apiNormalPrice;
+                if (apiPromoPrice) finalRegPrice = apiPromoPrice;
+                if (overridePrice) finalRegPrice = overridePrice;
+
+                return {
+                    ...item,
+                    final_registration_price: parseInt(finalRegPrice),
+                    has_promo_or_override: !!apiPromoPrice || (overridePrice && overridePrice < parseInt(apiNormalPrice))
+                };
+            });
+
+        res.render('domain-pricing', {
+            user: req.session.user,
+            prices: processedPrices,
+            pagination: priceData.meta,
+            title: 'Harga Domain',
+            description: 'Lihat daftar harga registrasi, perpanjangan, dan transfer domain TLD terlengkap.',
+            canonicalUrl: process.env.APP_BASE_URL + '/domain-pricing'
+        });
+    } catch (error) {
+        console.error("ERROR di getDomainPricingPage:", error);
+        req.flash('error_msg', `Gagal memuat daftar harga: ${error.message}`);
+        res.render('domain-pricing', {
+            user: req.session.user,
+            prices: [],
+            pagination: null,
+            title: 'Harga Domain'
+        });
     }
 };
 
@@ -73,25 +175,39 @@ exports.getSslPage = async (req, res) => {
     try {
         const sslApiResponse = await domainService.listSslProductsWithPrices();
         if (!sslApiResponse || !sslApiResponse.data) throw new Error("Respon API tidak valid.");
+
         const settings = await Setting.findOne() || new Setting();
         const sslPriceOverrides = settings.prices.ssl;
-        const sslProducts = sslApiResponse.data.map(p => ({
-            ...p,
-            original_price: p.price.sells.annually || 0,
-            price: sslPriceOverrides.get(p.name) || p.price.sells.annually || 0,
-            has_override: !!sslPriceOverrides.get(p.name)
-        }));
+
+        const sslProducts = sslApiResponse.data.map(item => {
+            const productInfo = item.product;
+            const overridePrice = sslPriceOverrides.get(productInfo.name);
+            const originalPrice = parseFloat(item['1']);
+
+            // **PERBAIKAN: Buat struktur yang jelas dan tidak tumpang tindih**
+            return {
+                productId: productInfo.id, // ID Produk (misal: 1, 2)
+                priceId: item.id,         // ID Harga (misal: 2919, 2920)
+                name: productInfo.name,
+                brand: productInfo.brand,
+                ssl_type: productInfo.ssl_type,
+                is_wildcard: productInfo.is_wildcard,
+                features: productInfo.features,
+                original_price: originalPrice,
+                price: overridePrice || originalPrice,
+                has_override: !!overridePrice
+            };
+        });
         
         res.render('ssl', {
             user: req.session.user,
             sslProducts,
-            title: 'Beli Sertifikat SSL Murah',
-            description: 'Amankan website Anda dengan sertifikat SSL dari brand terpercaya.',
-            canonicalUrl: process.env.APP_BASE_URL + '/ssl'
+            title: 'Beli Sertifikat SSL Murah'
         });
     } catch (error) {
+        console.error("GAGAL MEMUAT SSL:", error); 
         req.flash('error_msg', `Gagal memuat produk SSL: ${error.message}`);
-        res.render('ssl', { user: req.session.user, sslProducts: [] });
+        res.render('ssl', { user: req.session.user, sslProducts: [], title: 'Beli Sertifikat SSL' });
     }
 };
 

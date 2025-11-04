@@ -4,20 +4,38 @@
 <p>Silakan isi detail di bawah ini untuk membuat Certificate Signing Request (CSR).</p>
 
 <div class="card">
-    <form action="/ssl/order/<%= product.id %>/generate-csr" method="POST">
+    <form id="csr-form" action="/ssl/order/<%= price_id %>/generate-csr" method="POST" data-is-wildcard="<%= product.is_wildcard %>">
         <div class="form-group">
             <label for="csr_name">Nama Domain (Common Name)</label>
-            <input type="text" name="csr_name" id="csr_name" class="form-control" required placeholder="contoh.com atau www.contoh.com">
-            <small>Untuk Wildcard, gunakan format: *.contoh.com</small>
+            
+            <!-- PERBAIKAN: Placeholder dinamis berdasarkan tipe SSL -->
+            <input 
+                type="text" 
+                name="csr_name" 
+                id="csr_name" 
+                class="form-control" 
+                required 
+                placeholder="<%= product.is_wildcard ? '*.domainanda.com' : 'www.domainanda.com' %>"
+            >
+            
+            <!-- PERBAIKAN: Instruksi yang lebih jelas dan menonjol -->
+            <% if (product.is_wildcard) { %>
+                <small style="color: var(--nexus-danger); font-weight: bold; display: block; margin-top: 5px;">
+                    <i class="fas fa-exclamation-triangle"></i> Ini adalah SSL Wildcard. Format <strong>wajib</strong> diawali dengan <code>*.</code>
+                </small>
+            <% } else { %>
+                <small>Masukkan nama domain atau subdomain yang ingin diamankan (contoh: domainanda.com atau blog.domainanda.com).</small>
+            <% } %>
         </div>
+        
         <div class="form-group">
             <label for="csr_email">Email Kontak</label>
-            <input type="email" name="csr_email" id="csr_email" class="form-control" required placeholder="admin@contoh.com">
+            <input type="email" name="csr_email" id="csr_email" class="form-control" required placeholder="admin@domainanda.com">
         </div>
         <div class="grid-2">
             <div class="form-group">
                 <label for="csr_organization">Organisasi</label>
-                <input type="text" name="csr_organization" id="csr_organization" class="form-control" required placeholder="Nama Perusahaan Anda">
+                <input type="text" name="csr_organization" id="csr_organization" class="form-control" required placeholder="Nama Perusahaan atau Nama Anda">
             </div>
             <div class="form-group">
                 <label for="csr_department">Departemen</label>
@@ -37,5 +55,22 @@
         <button type="submit" class="btn btn-primary" style="width: 100%;">Lanjutkan ke Konfirmasi</button>
     </form>
 </div>
+
+<!-- SCRIPT VALIDASI YANG DIPERBARUI -->
+<script>
+    document.getElementById('csr-form').addEventListener('submit', function(event) {
+        const form = event.target;
+        const isWildcard = form.getAttribute('data-is-wildcard') === '1' || form.getAttribute('data-is-wildcard') === 'true';
+        const domainInput = document.getElementById('csr_name');
+        const domainName = domainInput.value.trim();
+
+        if (isWildcard && !domainName.startsWith('*.')) {
+            event.preventDefault();
+            alert('Format Domain Salah!\n\nUntuk SSL Wildcard, nama domain harus diawali dengan *. (contoh: *.domainanda.com)');
+            domainInput.focus();
+            domainInput.select(); // Sorot teks yang salah
+        }
+    });
+</script>
 
 <%- include('../partials/footer') %>
