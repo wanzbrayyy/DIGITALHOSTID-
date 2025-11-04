@@ -31,6 +31,15 @@
         <a href="/admin/notifications" class="btn btn-secondary">Kirim Notifikasi</a>
         <a href="/admin/products" class="btn btn-secondary">Kelola Produk</a>
         <a href="/admin/settings-harga" class="btn btn-secondary">Pengaturan Harga</a>
+        <a href="/admin/free-domain-requests" class="btn btn-secondary">Permintaan Domain</a>
+        <a href="/admin/system-status" class="btn btn-secondary">Status Sistem</a>
+        
+        <!-- Tombol Baru untuk Afiliasi -->
+        <form action="/admin/process-affiliates" method="POST" onsubmit="return confirm('Anda yakin ingin memproses payout afiliasi sekarang? Tindakan ini akan memberi saldo kepada semua pengguna yang memenuhi syarat.')">
+            <button type="submit" class="btn btn-primary" style="background: var(--nexus-success);">
+                <i class="fas fa-gift"></i> Proses Payout Afiliasi
+            </button>
+        </form>
     </div>
 </div>
 

@@ -1,0 +1,27 @@
+<%- include('../partials/header', { title: title }) %>
+<h1>Permintaan Domain Gratis</h1>
+<div class="card table-wrapper">
+    <table>
+        <thead><tr><th>Domain</th><th>Email</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody>
+            <% requests.forEach(req => { %>
+            <tr>
+                <td><%= req.domainName %></td>
+                <td><%= req.email %></td>
+                <td><%= req.status %></td>
+                <td>
+                    <form action="/admin/free-domain-requests/update" method="POST">
+                        <input type="hidden" name="requestId" value="<%= req._id %>">
+                        <select name="status" onchange="this.form.submit()">
+                            <option value="pending" <%= req.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                            <option value="approved" <%= req.status === 'approved' ? 'selected' : '' %>>Setujui</option>
+                            <option value="rejected" <%= req.status === 'rejected' ? 'selected' : '' %>>Tolak</option>
+                        </select>
+                    </form>
+                </td>
+            </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+<%- include('../partials/footer') %>
