@@ -145,27 +145,30 @@ exports.checkDomain = async (req, res) => {
 };
 
 exports.orderDomain = async (req, res) => {
-    const { domain } = req.query;
-    if (!domain) {
-        req.flash('error_msg', 'Nama domain tidak valid.');
+    const { domain, price } = req.query;
+    if (!domain || !price) {
+        req.flash('error_msg', 'Informasi domain atau harga tidak valid.');
         return res.redirect('/');
     }
     
     try {
-        let settings = await Setting.findOne();
-        if (!settings) settings = await new Setting().save();
-        const tld = domain.split('.').pop();
-        const price = settings.prices.tld.get(tld) || 150000;
-
         req.session.cart = {
             type: 'domain',
-            item: { domain: domain, price: price },
-            options: { period: 1, buy_whois_protection: false }
+            item: { domain: domain, price: parseFloat(price) },
+            options: {
+                period: 1,
+                buy_whois_protection: false
+            }
         };
 
-        if (!req.session.user) return res.redirect('/register');
+        if (!req.session.user) {
+            return res.redirect('/register');
+        }
+
         res.redirect('/checkout');
+
     } catch (error) {
+        console.error("ERROR di orderDomain:", error); 
         req.flash('error_msg', 'Gagal memproses pesanan domain.');
         res.redirect('/');
     }

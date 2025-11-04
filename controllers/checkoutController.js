@@ -169,3 +169,32 @@ exports.processCheckout = async (req, res) => {
         res.redirect('/checkout');
     }
 };
+exports.updateCartDomain = async (req, res) => {
+    const { newDomain } = req.body;
+    if (!req.session.cart || req.session.cart.type !== 'domain') {
+        return res.status(400).json({ success: false, message: 'Keranjang tidak valid.' });
+    }
+    if (!newDomain || newDomain.length < 4 || !newDomain.includes('.')) {
+        return res.status(400).json({ success: false, message: 'Format domain tidak valid.' });
+    }
+
+    try {
+        const settings = await Setting.findOne() || new Setting();
+        const tld = newDomain.split('.').pop();
+        const safeTldKey = tld.replace(/\./g, '_');
+        
+        const price = settings.prices.tld.get(safeTldKey) || 150000;
+
+        req.session.cart.item.domain = newDomain;
+        req.session.cart.item.price = price;
+
+        req.session.save(err => {
+            if (err) {
+                return res.status(500).json({ success: false, message: 'Gagal menyimpan sesi.' });
+            }
+            res.json({ success: true, message: 'Domain di keranjang berhasil diperbarui.' });
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
+    }
+};

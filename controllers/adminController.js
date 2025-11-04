@@ -216,6 +216,27 @@ exports.getSettingsHargaPage = async (req, res) => {
         let settings = await Setting.findOne();
         if (!settings) settings = await new Setting().save();
         
+        const allDomainPricesResponse = await domainService.listAllDomainPrices({ limit: 100 });
+
+        // **PERBAIKAN UTAMA: Saring dan proses data API sebelum dikirim ke view**
+        const processedTldsFromApi = allDomainPricesResponse.data
+            .filter(item => 
+                item && 
+                item.registration && 
+                item.registration['1'] &&
+                item.domain_extension
+            )
+            .map(item => {
+                const promoPrice = (item.promo_registration && item.promo_registration.registration)
+                                   ? item.promo_registration.registration['1']
+                                   : null;
+                const normalPrice = item.registration['1'];
+                return {
+                    tld: item.domain_extension.extension.substring(1), // Hasil: "co.id"
+                    apiPrice: promoPrice || normalPrice
+                };
+            });
+
         const sslApiResponse = await domainService.listSslProductsWithPrices();
 
         const displayTldPrices = {};
@@ -229,6 +250,7 @@ exports.getSettingsHargaPage = async (req, res) => {
             user: req.session.user,
             whoisPrice: settings.prices.whois,
             tldPrices: displayTldPrices,
+            allTldsFromApi: processedTldsFromApi, // Kirim data yang sudah bersih
             sslPrices: Object.fromEntries(settings.prices.ssl || new Map()),
             sslApiProducts: sslApiResponse.data || [],
             title: 'Pengaturan Harga'
@@ -242,34 +264,55 @@ exports.getSettingsHargaPage = async (req, res) => {
 exports.updateSettingsHarga = async (req, res) => {
     try {
         const { setting_type } = req.body;
-        
-        let settings = await Setting.findOne();
-        if (!settings) {
-            settings = new Setting();
-        }
+        let settings = await Setting.findOne() || new Setting();
+
+        // **PERBAIKAN "BRUTAL" DIMULAI DI SINI**
+
+        // 1. Buat salinan dari objek prices yang ada
+        const newPrices = {
+            whois: settings.prices.whois,
+            tld: new Map(settings.prices.tld),
+            ssl: new Map(settings.prices.ssl)
+        };
 
         switch (setting_type) {
             case 'whois':
-                settings.prices.whois = req.body.whois_price;
+                newPrices.whois = req.body.whois_price;
                 break;
-            case 'tld':
-                const safeTldKey = req.body.tld.replace(/\./g, '_');
-                settings.prices.tld.set(safeTldKey, req.body.price);
+            
+            case 'tld_bulk':
+                if (req.body.tld_prices) {
+                    const tldPricesFromForm = req.body.tld_prices;
+                    for (const tld in tldPricesFromForm) {
+                        const safeKey = tld.replace(/\./g, '_');
+                        const price = tldPricesFromForm[tld];
+
+                        if (price && price > 0) {
+                            newPrices.tld.set(safeKey, parseInt(price));
+                        } else {
+                            newPrices.tld.delete(safeKey);
+                        }
+                    }
+                }
                 break;
-            case 'tld_remove':
-                const keyToDelete = req.body.remove_tld.replace(/\./g, '_');
-                settings.prices.tld.delete(keyToDelete);
-                break;
+            
             case 'ssl':
                 if (req.body.ssl_prices) {
-                    const filteredPrices = Object.entries(req.body.ssl_prices).filter(([key, value]) => value !== '');
-                    settings.prices.ssl = new Map(filteredPrices);
+                    const filteredPrices = Object.entries(req.body.ssl_prices).filter(([_, value]) => value !== '');
+                    newPrices.ssl = new Map(filteredPrices);
                 }
                 break;
         }
         
+        // 2. GANTI SELURUH OBJEK 'prices' dengan yang baru
+        settings.prices = newPrices;
+        
+        // 3. (Opsional tapi aman) Tandai path utama sebagai termodifikasi
+        settings.markModified('prices');
+
         await settings.save();
         req.flash('success_msg', 'Pengaturan harga berhasil diperbarui.');
+
     } catch (error) {
         req.flash('error_msg', `Gagal memperbarui harga: ${error.message}`);
     }
