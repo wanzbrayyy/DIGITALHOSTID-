@@ -71,6 +71,8 @@
         .bottom-nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--nexus-text-gray); font-size: 0.7rem; flex-grow: 1; text-decoration: none; }
         .bottom-nav-item i { font-size: 1.5rem; margin-bottom: 4px; }
         @media (max-width: 768px) { #public-nav-toggle { display: block; } .top-bar-right .desktop-nav { display: none; } }
+        .credit-balance a { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--nexus-success); text-decoration: none; padding: 5px 10px; border-radius: 20px; background-color: #ecfdf5; border: 1px solid #a7f3d0; }
+.credit-balance a:hover { background-color: #d1fae5; }
     </style>
         <script type="application/ld+json">
     {
@@ -93,8 +95,14 @@
              <img src="https://files.catbox.moe/sepzlr.png" alt="Logo DigitalHostID">
              <span>DigitalHostID</span>
         </a>
-        <div class="top-bar-right">
+          <div class="top-bar-right">
             <% if (user) { %>
+                <div class="credit-balance">
+                    <a href="/dashboard/deposit" title="Deposit Saldo">
+                        <i class="fas fa-wallet"></i>
+                        <span>Rp <%= (user.creditBalance || 0).toLocaleString('id-ID') %></span>
+                    </a>
+                </div>
                 <div id="notification-bell" class="notification-bell">
                     <i class="fas fa-bell" style="font-size: 1.4rem;"></i>
                     <span id="notification-count" class="notification-count" style="display: none;">0</span>
@@ -107,6 +115,10 @@
                     <img src="<%= user.profilePicture %>" data-name="<%= user.name %>" class="user-profile-avatar default-avatar-img" alt="Avatar">
                 </div>
                 <div class="profile-dropdown" id="profile-dropdown">
+                    <a href="/dashboard/deposit" class="profile-dropdown-item"><i class="fas fa-money-bill-wave"></i> Deposit Saldo</a>
+                    <a href="/dashboard/invoices" class="profile-dropdown-item"><i class="fas fa-file-invoice-dollar"></i> Riwayat Faktur</a>
+                    <a href="/dashboard/renew" class="profile-dropdown-item"><i class="fas fa-sync-alt"></i> Perpanjang Layanan</a>
+                    <hr style="margin: 0; border-color: #eee;">
                     <a href="/dashboard/my-services" class="profile-dropdown-item"><i class="fas fa-box-open"></i> Layanan Saya</a>
                     <a href="/dashboard/tickets" class="profile-dropdown-item"><i class="fas fa-life-ring"></i> Tiket Bantuan</a>
                     <a href="/dashboard/affiliate" class="profile-dropdown-item"><i class="fas fa-users"></i> Afiliasi</a>
