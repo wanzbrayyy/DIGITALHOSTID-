@@ -1,0 +1,42 @@
+<%- include('../partials/header', { title: 'Perpanjang Layanan' }) %>
+
+<style>
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--nexus-border-color); }
+    table th { font-weight: 600; background-color: #f9fafb; }
+</style>
+
+<h1><i class="fas fa-sync-alt"></i> Perpanjang Domain & Layanan</h1>
+<p>Pilih layanan yang ingin Anda perpanjang di bawah ini. Layanan yang akan kedaluwarsa dalam 30 hari akan muncul di sini.</p>
+
+<div class="card">
+    <form action="/dashboard/renew/checkout" method="POST">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all"></th>
+                        <th>Layanan</th>
+                        <th>Tanggal Kedaluwarsa</th>
+                        <th>Biaya Perpanjangan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 40px; color: var(--nexus-text-gray);">
+                            (Fitur dalam pengembangan) <br>
+                            <small>Tidak ada layanan yang akan kedaluwarsa dalam waktu dekat.</small>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 1rem; margin-top: 2rem;">
+            <span style="font-weight: 600;">Total: Rp 0</span>
+            <button type="submit" class="btn btn-primary" disabled>Lanjutkan ke Pembayaran</button>
+        </div>
+    </form>
+</div>
+
+<%- include('../partials/footer') %>

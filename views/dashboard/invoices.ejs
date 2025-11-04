@@ -1,0 +1,43 @@
+<%- include('../partials/header', { title: title }) %>
+
+<style>
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--nexus-border-color); }
+    table th { font-weight: 600; background-color: #f9fafb; }
+    .status-paid { color: var(--nexus-success); font-weight: bold; }
+    .status-unpaid { color: var(--nexus-warning); }
+    .status-cancelled { color: var(--nexus-danger); }
+</style>
+
+<h1><i class="fas fa-file-invoice-dollar"></i> Riwayat Faktur</h1>
+<p>Lihat semua riwayat transaksi dan faktur Anda.</p>
+
+<div class="card table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>ID Faktur</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Tanggal</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (invoices && invoices.length > 0) { invoices.forEach(inv => { %>
+                <tr>
+                    <td><strong>#<%= inv.invoiceId %></strong></td>
+                    <td>Rp <%= inv.totalAmount.toLocaleString('id-ID') %></td>
+                    <td><span class="status-<%= inv.status %>"><%= inv.status.charAt(0).toUpperCase() + inv.status.slice(1) %></span></td>
+                    <td><%= new Date(inv.createdAt).toLocaleDateString('id-ID') %></td>
+                    <td><a href="#" class="btn btn-sm btn-secondary">Lihat</a></td>
+                </tr>
+            <% }) } else { %>
+                <tr><td colspan="5" style="text-align: center; padding: 20px;">Belum ada faktur yang dibuat.</td></tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<%- include('../partials/footer') %>
