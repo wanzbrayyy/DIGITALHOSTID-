@@ -5,6 +5,8 @@ const Voucher = require('../models/voucher');
 const Promo = require('../models/promo');
 const Notification = require('../models/notification');
 const Setting = require('../models/setting');
+const FreeDomainRequest = require('../models/freeDomainRequest');
+const SystemService = require('../models/systemService');
 
 exports.getAdminDashboard = async (req, res) => {
     try {
@@ -263,4 +265,60 @@ exports.updateSettingsHarga = async (req, res) => {
         req.flash('error_msg', `Gagal memperbarui harga: ${error.message}`);
     }
     res.redirect('/admin/settings-harga');
+};
+exports.getFreeDomainRequests = async (req, res) => {
+    try {
+        const requests = await FreeDomainRequest.find().sort({ createdAt: -1 });
+        res.render('admin/free-domain-requests', {
+            user: req.session.user,
+            requests,
+            title: 'Permintaan Domain Gratis'
+        });
+    } catch (error) {
+        req.flash('error_msg', 'Gagal memuat permintaan domain.');
+        res.redirect('/admin');
+    }
+};
+
+exports.updateFreeDomainRequestStatus = async (req, res) => {
+    try {
+        const { requestId, status } = req.body;
+        await FreeDomainRequest.findByIdAndUpdate(requestId, { status });
+        req.flash('success_msg', 'Status permintaan berhasil diperbarui.');
+        res.redirect('/admin/free-domain-requests');
+    } catch (error) {
+        req.flash('error_msg', 'Gagal memperbarui status.');
+        res.redirect('/admin/free-domain-requests');
+    }
+};
+
+exports.getSystemStatusManagement = async (req, res) => {
+    try {
+        const services = await SystemService.find();
+        res.render('admin/manage-system-status', {
+            user: req.session.user,
+            services,
+            title: 'Kelola Status Sistem'
+        });
+    } catch (error) {
+        req.flash('error_msg', 'Gagal memuat halaman status sistem.');
+        res.redirect('/admin');
+    }
+};
+
+exports.updateSystemStatus = async (req, res) => {
+    try {
+        const { serviceId, status, description } = req.body;
+        if (!serviceId) { // Create new service
+            await SystemService.create({ name: req.body.name, status, description });
+            req.flash('success_msg', 'Layanan baru berhasil ditambahkan.');
+        } else { // Update existing
+            await SystemService.findByIdAndUpdate(serviceId, { status, description });
+            req.flash('success_msg', 'Status layanan berhasil diperbarui.');
+        }
+        res.redirect('/admin/system-status');
+    } catch (error) {
+        req.flash('error_msg', 'Gagal memperbarui status sistem.');
+        res.redirect('/admin/system-status');
+    }
 };

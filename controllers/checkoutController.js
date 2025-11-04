@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const Setting = require('../models/setting');
 const User = require('../models/user');
 const Voucher = require('../models/voucher');
+const domainService = require('../services/domainService');
 
 const snap = new midtransClient.Snap({
     isProduction: process.env.MIDTRANS_IS_PRODUCTION === 'true',
@@ -16,28 +17,37 @@ const calculatePrices = (cart, settings) => {
 
     const whoisBasePrice = settings.prices.whois;
     let subtotal = 0;
-    let whoisAddedPrice = 0;
 
     if (cart.type === 'domain') {
         const period = cart.options.period || 1;
         const basePrice = cart.item.price;
-        whoisAddedPrice = cart.options.buy_whois_protection ? whoisBasePrice : 0;
+        const whoisAddedPrice = cart.options.buy_whois_protection ? whoisBasePrice : 0;
         subtotal = (basePrice * period) + whoisAddedPrice;
     } else {
         subtotal = cart.item.price;
     }
 
     cart.pricing.subtotal = subtotal;
-    cart.pricing.whoisAddedPrice = whoisAddedPrice;
-
     let discountAmount = 0;
-    if (cart.discount && cart.discount.code) {
+    if (cart.discount && cart.discount.percentage) {
         discountAmount = Math.round(subtotal * (cart.discount.percentage / 100));
         cart.discount.amount = discountAmount;
     }
-
     cart.pricing.finalPrice = subtotal - discountAmount;
     return cart;
+};
+
+const fulfillOrder = async (cart, user) => {
+    if (cart.type === 'domain') {
+        const userDetails = await User.findById(user.id);
+        const domainData = {
+            name: cart.item.domain,
+            period: cart.options.period,
+            customer_id: userDetails.customerId,
+            buy_whois_protection: cart.options.buy_whois_protection || false
+        };
+        await domainService.registerDomain(domainData);
+    }
 };
 
 exports.addToCart = (req, res) => {
@@ -57,11 +67,12 @@ exports.getCheckoutPage = async (req, res) => {
         return res.redirect('/');
     }
     try {
+        const user = await User.findById(req.session.user.id);
         const settings = await Setting.findOne() || new Setting();
         req.session.cart = calculatePrices(req.session.cart, settings);
         
         res.render('checkout', {
-            user: req.session.user,
+            user: user,
             cart: req.session.cart,
             clientKey: process.env.MIDTRANS_CLIENT_KEY,
             title: 'Checkout Pesanan'
@@ -88,21 +99,17 @@ exports.applyVoucher = async (req, res) => {
     try {
         const { code } = req.body;
         if (!code || !req.session.cart) return res.redirect('/checkout');
-
         const voucher = await Voucher.findOne({ code: code.toUpperCase() });
         if (!voucher || !voucher.isActive || new Date(voucher.expiryDate) < new Date()) {
             req.flash('error_msg', 'Voucher tidak valid atau sudah kedaluwarsa.');
             return res.redirect('/checkout');
         }
-
         req.session.cart.discount = {
             code: voucher.code,
             percentage: voucher.discount
         };
-        
         req.flash('success_msg', `Voucher ${voucher.code} berhasil diterapkan.`);
         res.redirect('/checkout');
-
     } catch (error) {
         req.flash('error_msg', `Gagal menerapkan voucher: ${error.message}`);
         res.redirect('/checkout');
@@ -117,24 +124,48 @@ exports.removeVoucher = (req, res) => {
     res.redirect('/checkout');
 };
 
-exports.processPayment = async (req, res) => {
+exports.processCheckout = async (req, res) => {
+    const { payment_method } = req.body;
+    if (!req.session.cart) {
+        req.flash('error_msg', 'Keranjang Anda kosong.');
+        return res.redirect('/');
+    }
+
     try {
-        if (!req.session.cart) return res.status(400).json({ error: 'Sesi keranjang tidak valid.' });
-        
         const user = await User.findById(req.session.user.id);
         const settings = await Setting.findOne() || new Setting();
         const cart = calculatePrices(req.session.cart, settings);
-        
-        const orderId = `TRX-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
-        const parameter = {
-            transaction_details: { order_id: orderId, gross_amount: cart.pricing.finalPrice },
-            customer_details: { first_name: user.name, email: user.email, phone: user.voice }
-        };
+        const finalPrice = cart.pricing.finalPrice;
 
-        req.session.pending_order = { order_id: orderId, cart: cart, user_id: user._id };
-        const token = await snap.createTransactionToken(parameter);
-        res.json({ token });
+        if (payment_method === 'credit') {
+            if (user.creditBalance < finalPrice) {
+                req.flash('error_msg', 'Saldo Anda tidak mencukupi untuk transaksi ini.');
+                return res.redirect('/checkout');
+            }
+
+            user.creditBalance -= finalPrice;
+            await user.save();
+            req.session.user.creditBalance = user.creditBalance;
+
+            await fulfillOrder(cart, req.session.user);
+
+            delete req.session.cart;
+            req.flash('success_msg', 'Pembayaran dengan saldo berhasil! Layanan Anda sedang diaktifkan.');
+            return res.redirect('/dashboard');
+
+        } else {
+            const orderId = `TRX-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
+            const parameter = {
+                transaction_details: { order_id: orderId, gross_amount: finalPrice },
+                customer_details: { first_name: user.name, email: user.email, phone: user.voice }
+            };
+            req.session.pending_order = { order_id: orderId, cart: cart, user_id: user._id };
+            const token = await snap.createTransactionToken(parameter);
+            return res.json({ token });
+        }
     } catch (error) {
-        res.status(500).json({ error: 'Gagal memproses pembayaran: ' + error.message });
+        console.error("ERROR di processCheckout:", error);
+        req.flash('error_msg', `Gagal memproses pembayaran: ${error.message}`);
+        res.redirect('/checkout');
     }
 };

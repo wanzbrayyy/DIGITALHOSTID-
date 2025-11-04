@@ -165,3 +165,17 @@ exports.updateSettings = async (req, res) => {
         res.redirect('/dashboard/settings');
     }
 };
+
+
+exports.getRenewPage = async (req, res) => {
+    try {
+        const user = await User.findById(req.session.user.id);
+        res.render('dashboard/renew', {
+            user: user,
+            title: 'Perpanjang Layanan'
+        });
+    } catch (error) {
+        req.flash('error_msg', 'Gagal memuat halaman perpanjangan.');
+        res.redirect('/dashboard');
+    }
+};

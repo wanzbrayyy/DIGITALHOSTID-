@@ -1,6 +1,7 @@
 const domainService = require('../services/domainService');
 const User = require('../models/user');
 const Setting = require('../models/setting');
+
 exports.getOrderPage = async (req, res) => {
     try {
         const product = await domainService.showSslProductWithPrice(req.params.productId);
@@ -18,16 +19,17 @@ exports.getOrderPage = async (req, res) => {
         res.redirect('/ssl');
     }
 };
+
 exports.generateCsrAndConfirm = async (req, res) => {
     try {
         const user = await User.findById(req.session.user.id);
         const product = await domainService.showSslProductWithPrice(req.params.productId);
 
-        const csrData = { ...req.body, country_code: 'ID' };
+        const csrData = { ...req.body, csr_country: 'ID' }; // Sesuaikan csr_country
         const csrResponse = await domainService.generateCsr(csrData);
 
         res.render('ssl/confirm-ssl-order', {
-            user: user, // Kirim data user lengkap untuk pre-fill
+            user: user,
             product,
             csr: csrResponse.data,
             title: 'Konfirmasi Pesanan SSL'
@@ -38,7 +40,6 @@ exports.generateCsrAndConfirm = async (req, res) => {
     }
 };
 
-// Aksi 2: Proses pesanan akhir
 exports.processSslOrder = async (req, res) => {
     try {
         const { csr_code, dcv_method } = req.body;
@@ -50,7 +51,7 @@ exports.processSslOrder = async (req, res) => {
             organization: user.organization || user.name,
             address: user.street_1,
             phone: user.voice,
-            title: 'Administrator',
+            title: 'IT',
             email: user.email,
             city: user.city,
             country: user.country_code,
