@@ -1,85 +1,149 @@
 <%- include('../partials/header', { title: 'DNS Manager' }) %>
 
 <style>
+    /*
+    ============================================
+    --- DNS MANAGER PAGE STYLING ---
+    ============================================
+    */
+    .page-header {
+        margin-bottom: 2.5rem;
+    }
+    .page-header h1 {
+        font-size: clamp(2rem, 5vw, 2.8rem); font-weight: 800; margin-bottom: 0.5rem;
+    }
+    .page-header h1 .domain-name-highlight {
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .page-header p { font-size: 1.1rem; color: var(--color-text-muted); max-width: 700px; }
+
+    .card {
+        background-color: white; border-radius: var(--border-radius-lg);
+        padding: 2rem; box-shadow: var(--shadow-md); margin-bottom: 2rem;
+    }
+    .card h3 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+
+    /* Add Record Form */
     .form-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
+        grid-template-columns: 1fr 2fr 3fr 1fr auto;
+        gap: 1.5rem;
         align-items: flex-end;
     }
+    .form-group label {
+        display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-text-dark);
+    }
+    .form-group .form-control {
+        width: 100%; padding: 14px 18px; border-radius: var(--border-radius-md);
+        background-color: var(--color-bg-light); border: 1px solid var(--color-border);
+        font-size: 1rem; transition: all 0.3s ease;
+    }
+    .form-group .form-control:focus {
+        background-color: white; border-color: var(--color-primary-start);
+        box-shadow: 0 0 0 3px rgba(74, 0, 224, 0.15); outline: none;
+    }
+
+    /* DNS Records Table */
     .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--nexus-border-color); }
-    table th { font-weight: 600; background-color: #f9fafb; }
-    td[data-label="Value"] { word-break: break-all; }
+    .dns-table { width: 100%; border-collapse: collapse; }
+    .dns-table th, .dns-table td {
+        padding: 1rem 1.5rem; text-align: left; border-bottom: 1px solid var(--color-border);
+    }
+    .dns-table th { font-weight: 600; font-size: 0.9rem; color: var(--color-text-muted); }
+    .dns-table tr:last-child td { border-bottom: none; }
+    .dns-table td[data-label="Value"] { word-break: break-all; font-family: 'Courier New', monospace; }
+    
+    .record-type-badge {
+        padding: 4px 10px; border-radius: 5px; font-weight: 700;
+        background-color: var(--color-bg-light); border: 1px solid var(--color-border);
+        color: var(--color-primary-start);
+    }
+    .btn-delete {
+        background: transparent; border: none; color: var(--color-danger);
+        cursor: pointer; font-size: 1.2rem; padding: 5px;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .form-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        .form-grid .form-group:nth-child(3) { grid-column: 1 / -1; } /* Value field takes full width */
+        .form-grid .btn { grid-column: 1 / -1; width: 100%; justify-content: center; }
+    }
+    @media (max-width: 576px) {
+        .form-grid { grid-template-columns: 1fr; }
+    }
 </style>
 
-<h1>DNS Manager: <span style="color: var(--nexus-primary-dark);"><%= domainName %></span></h1>
-<p>Kelola DNS record untuk domain Anda. Perubahan mungkin memerlukan waktu untuk propagasi.</p>
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="page-header">
+        <h1>DNS Manager: <span class="domain-name-highlight"><%= domainName %></span></h1>
+        <p>Kelola DNS record untuk domain Anda. Perubahan mungkin memerlukan waktu beberapa jam untuk propagasi di seluruh dunia.</p>
+    </div>
 
-<div class="card">
-    <h3>Tambah Record Baru</h3>
-    <form action="/dashboard/domain/<%= domainId %>/dns/create" method="POST" class="form-grid">
-        <div class="form-group" style="margin: 0;">
-            <label for="type">Tipe</label>
-            <select name="type" id="type" class="form-control" required>
-                <option value="A">A</option>
-                <option value="AAAA">AAAA</option>
-                <option value="CNAME">CNAME</option>
-                <option value="MX">MX</option>
-                <option value="TXT">TXT</option>
-            </select>
-        </div>
-        <div class="form-group" style="margin: 0;">
-            <label for="name">Nama Host</label>
-            <input type="text" name="name" id="name" class="form-control" placeholder="@, www, mail" required>
-        </div>
-        <div class="form-group" style="margin: 0;">
-            <label for="content">Value / Mengarah ke</label>
-            <input type="text" name="content" id="content" class="form-control" placeholder="IP Address atau domain lain" required>
-        </div>
-        <div class="form-group" style="margin: 0;">
-            <label for="ttl">TTL</label>
-            <input type="number" name="ttl" id="ttl" class="form-control" value="3600">
-        </div>
-        <button type="submit" class="btn btn-primary">Tambah Record</button>
-    </form>
-</div>
+    <div class="card">
+        <h3>Tambah Record Baru</h3>
+        <form action="/dashboard/domain/<%= domainId %>/dns/create" method="POST" class="form-grid">
+            <div class="form-group" style="margin: 0;">
+                <label for="type">Tipe</label>
+                <select name="type" id="type" class="form-control" required>
+                    <option value="A">A</option> <option value="AAAA">AAAA</option>
+                    <option value="CNAME">CNAME</option> <option value="MX">MX</option>
+                    <option value="TXT">TXT</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin: 0;">
+                <label for="name">Nama Host</label>
+                <input type="text" name="name" id="name" class="form-control" placeholder="@, www, mail" required>
+            </div>
+            <div class="form-group" style="margin: 0;">
+                <label for="content">Value / Mengarah ke</label>
+                <input type="text" name="content" id="content" class="form-control" placeholder="IP Address atau domain lain" required>
+            </div>
+            <div class="form-group" style="margin: 0;">
+                <label for="ttl">TTL</label>
+                <input type="number" name="ttl" id="ttl" class="form-control" value="3600">
+            </div>
+            <button type="submit" class="btn btn-primary">Tambah</button>
+        </form>
+    </div>
 
-<div class="card">
-    <h3>Record yang Ada</h3>
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Tipe</th>
-                    <th>Nama Host</th>
-                    <th>Value</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (records && records.length > 0) { %>
-                    <% records.forEach(record => { %>
-                        <tr>
-                            <td data-label="Tipe"><%= record.type %></td>
-                            <td data-label="Nama Host"><%= record.name %></td>
-                            <td data-label="Value"><%= record.content %></td>
-                            <td data-label="Aksi">
-                                <form action="/dashboard/domain/<%= domainId %>/dns/delete" method="POST" onsubmit="return confirm('Yakin ingin menghapus record ini?');">
-                                    <input type="hidden" name="type" value="<%= record.type %>">
-                                    <input type="hidden" name="name" value="<%= record.name %>">
-                                    <input type="hidden" name="content" value="<%= record.content %>">
-                                    <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                    <% }) %>
-                <% } else { %>
-                    <tr><td colspan="4" style="text-align: center; padding: 20px;">Belum ada DNS record.</td></tr>
-                <% } %>
-            </tbody>
-        </table>
+    <div class="card">
+        <h3>Record yang Ada</h3>
+        <div class="table-wrapper">
+            <table class="dns-table">
+                <thead>
+                    <tr>
+                        <th>Tipe</th>
+                        <th>Nama Host</th>
+                        <th>Value</th>
+                        <th style="text-align: right;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (records && records.length > 0) { %>
+                        <% records.forEach(record => { %>
+                            <tr>
+                                <td data-label="Tipe"><span class="record-type-badge"><%= record.type %></span></td>
+                                <td data-label="Nama Host"><%= record.name %></td>
+                                <td data-label="Value"><%= record.content %></td>
+                                <td data-label="Aksi" style="text-align: right;">
+                                    <form action="/dashboard/domain/<%= domainId %>/dns/delete" method="POST" onsubmit="return confirm('Yakin ingin menghapus record ini?');">
+                                        <input type="hidden" name="type" value="<%= record.type %>">
+                                        <input type="hidden" name="name" value="<%= record.name %>">
+                                        <input type="hidden" name="content" value="<%= record.content %>">
+                                        <button type="submit" class="btn-delete" title="Hapus Record"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="4" style="text-align: center; padding: 40px;">Belum ada DNS record. Gunakan formulir di atas untuk menambahkan.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

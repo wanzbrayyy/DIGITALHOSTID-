@@ -1,50 +1,142 @@
 <%- include('../partials/header', { title: 'Tiket Bantuan' }) %>
 
 <style>
-    .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--nexus-border-color); }
-    table th { font-weight: 600; background-color: #f9fafb; }
-    .status-buka { color: var(--nexus-success); font-weight: bold; }
-    .status-dijawab { color: var(--nexus-warning); font-weight: bold; }
-    .status-ditutup { color: var(--nexus-text-gray); }
+    /*
+    ============================================
+    --- TICKET LIST PAGE STYLING ---
+    ============================================
+    */
+    :root {
+        --status-buka-bg: #e7f7f2; --status-buka-fg: #0d8a59;
+        --status-dijawab-bg: #fff8e8; --status-dijawab-fg: #f59e0b;
+        --status-ditutup-bg: #f3f4f6; --status-ditutup-fg: #4b5563;
+    }
+    .page-header {
+        display: flex; justify-content: space-between; align-items: center;
+        flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2.5rem;
+    }
+    .page-header .header-text h1 {
+        font-size: clamp(2rem, 5vw, 2.8rem); font-weight: 800; margin: 0 0 0.5rem 0;
+        display: flex; align-items: center; gap: 15px;
+    }
+    .page-header h1 i {
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .page-header .header-text p { font-size: 1.1rem; color: var(--color-text-muted); margin: 0; }
+
+    /* --- Ticket List as Cards --- */
+    .ticket-list {
+        display: grid;
+        gap: 1.5rem;
+    }
+    .ticket-card {
+        display: grid;
+        grid-template-columns: 3fr 1fr 1fr 1fr;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 1.5rem 2rem;
+        background-color: white;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-md);
+        transition: all 0.3s ease;
+        border: 1px solid var(--color-border);
+        text-decoration: none;
+    }
+    .ticket-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--color-primary-start);
+    }
+    .ticket-subject h3 {
+        font-size: 1.2rem;
+        color: var(--color-text-dark);
+        margin: 0 0 0.25rem 0;
+    }
+    .ticket-subject small {
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+    }
+    .ticket-status-badge {
+        padding: 6px 12px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-align: center;
+    }
+    .status-buka { background-color: var(--status-buka-bg); color: var(--status-buka-fg); }
+    .status-dijawab { background-color: var(--status-dijawab-bg); color: var(--status-dijawab-fg); }
+    .status-ditutup { background-color: var(--status-ditutup-bg); color: var(--status-ditutup-fg); }
+    
+    .no-tickets {
+        text-align: center; padding: 4rem 2rem; background-color: white;
+        border-radius: var(--border-radius-lg); box-shadow: var(--shadow-md);
+    }
+    .no-tickets i { font-size: 4rem; color: var(--color-success); margin-bottom: 1.5rem; }
+
+    /* Responsive Ticket Cards */
+    @media (max-width: 768px) {
+        .ticket-card {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+            padding: 1.5rem;
+        }
+        .ticket-subject { margin-bottom: 1rem; }
+        .ticket-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+        .ticket-info::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--color-text-muted);
+        }
+    }
 </style>
 
-<div style="display: flex; justify-content: space-between; align-items: center;">
-    <h1><i class="fas fa-life-ring"></i> Tiket Bantuan</h1>
-    <a href="/dashboard/tickets/new" class="btn btn-primary">Buat Tiket Baru</a>
-</div>
-<p>Jika Anda mengalami kendala, tim kami siap membantu.</p>
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="page-header">
+        <div class="header-text">
+            <h1><i class="fas fa-life-ring"></i> Tiket Bantuan</h1>
+            <p>Jika Anda mengalami kendala, tim kami siap membantu.</p>
+        </div>
+        <a href="/dashboard/tickets/new" class="btn btn-primary"><i class="fas fa-plus"></i> Buat Tiket Baru</a>
+    </div>
 
-<div class="card">
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Subjek</th>
-                    <th>Departemen</th>
-                    <th>Status</th>
-                    <th>Update Terakhir</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (tickets && tickets.length > 0) { %>
-                    <% tickets.forEach(ticket => { %>
-                        <tr>
-                            <td><strong><%= ticket.subject %></strong></td>
-                            <td><%= ticket.department %></td>
-                            <td><span class="status-<%= ticket.status.toLowerCase() %>"><%= ticket.status %></span></td>
-                            <td><%= new Date(ticket.updatedAt).toLocaleString('id-ID') %></td>
-                            <td><a href="/dashboard/tickets/<%= ticket._id %>" class="btn btn-secondary btn-sm">Lihat</a></td>
-                        </tr>
-                    <% }) %>
-                <% } else { %>
-                    <tr><td colspan="5" style="text-align: center; padding: 20px;">Anda belum pernah membuat tiket.</td></tr>
-                <% } %>
-            </tbody>
-        </table>
+    <div class="ticket-list">
+        <% if (tickets && tickets.length > 0) { %>
+            <% tickets.forEach(ticket => { %>
+                <a href="/dashboard/tickets/<%= ticket._id %>" class="ticket-card">
+                    <div class="ticket-subject">
+                        <h3><%= ticket.subject %></h3>
+                        <small>Update: <%= new Date(ticket.updatedAt).toLocaleString('id-ID') %></small>
+                    </div>
+                    
+                    <!-- For Desktop -->
+                    <span class="d-none d-md-block"><%= ticket.department %></span>
+                    <span class="d-none d-md-block ticket-status-badge status-<%= ticket.status.toLowerCase() %>"><%= ticket.status %></span>
+                    <i class="fas fa-chevron-right d-none d-md-block" style="text-align: right; color: var(--color-text-muted);"></i>
+                    
+                    <!-- For Mobile -->
+                    <div class="d-md-none ticket-info" data-label="Departemen"><%= ticket.department %></div>
+                    <div class="d-md-none ticket-info" data-label="Status">
+                        <span class="ticket-status-badge status-<%= ticket.status.toLowerCase() %>"><%= ticket.status %></span>
+                    </div>
+                </a>
+            <% }) %>
+        <% } else { %>
+            <div class="no-tickets">
+                <i class="fas fa-check-circle"></i>
+                <h2>Tidak Ada Tiket</h2>
+                <p>Anda belum pernah membuat tiket bantuan. Kerja bagus!</p>
+            </div>
+        <% } %>
     </div>
 </div>
+
+<!-- Helper classes for responsive display -->
+<style>.d-none { display: none; } @media (min-width: 768px) { .d-md-none { display: none; } .d-md-block { display: block; } }</style>
 
 <%- include('../partials/footer') %>

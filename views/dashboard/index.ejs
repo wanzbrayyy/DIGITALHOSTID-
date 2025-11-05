@@ -1,99 +1,225 @@
 <%- include('../partials/header', { title: 'Dashboard' }) %>
 
 <style>
-    .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--nexus-border-color); white-space: nowrap; }
-    table th { font-weight: 600; background-color: #f9fafb; }
-    .action-icons a { margin-right: 15px; font-size: 1.2rem; color: var(--nexus-text-gray); }
-    .action-icons a:hover { color: var(--nexus-primary-dark); }
-    .status-active { color: var(--nexus-success); font-weight: bold; }
-    .status-suspended { color: var(--nexus-danger); font-weight: bold; }
-    .status-expired { color: var(--nexus-warning); }
+    /*
+    ============================================
+    --- DASHBOARD INDEX PAGE STYLING ---
+    ============================================
+    */
+    :root {
+        /* Status Badge Colors */
+        --status-active-bg: #e7f7f2; --status-active-fg: #0d8a59;
+        --status-suspended-bg: #feedee; --status-suspended-fg: #ef4444;
+        --status-expired-bg: #fff8e8; --status-expired-fg: #f59e0b;
+        --status-pending-bg: #eef3ff; --status-pending-fg: #4a00e0;
+        --status-transferred-away-bg: #f3f4f6; --status-transferred-away-fg: #4b5563;
+    }
+
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+    .dashboard-header h1 {
+        font-size: clamp(2rem, 5vw, 2.8rem);
+        font-weight: 800;
+        margin: 0;
+    }
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+    }
+    .header-actions .btn {
+        padding: 12px 24px;
+        font-size: 0.9rem;
+    }
+    .header-actions .btn i {
+        margin-right: 8px;
+    }
+
+    /* --- Domain List Card --- */
+    .domain-list-card {
+        background-color: white;
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        box-shadow: var(--shadow-lg);
+    }
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    .card-header h2 {
+        font-size: 1.5rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .card-header h2 i {
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .card-header small {
+        color: var(--color-text-muted);
+    }
     
-    .filter-form { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
-    .pagination { display: flex; justify-content: center; align-items: center; gap: 5px; margin-top: 2rem; }
-    .pagination a, .pagination span { display: inline-block; padding: 8px 14px; border-radius: var(--nexus-radius); text-decoration: none; }
-    .pagination a { background-color: white; border: 1px solid #ddd; }
-    .pagination a:hover { background-color: #f5f5f5; }
-    .pagination .active { background-color: var(--nexus-primary); color: white; border: 1px solid var(--nexus-primary); }
-    .pagination .disabled { color: #ccc; background-color: #f9f9f9; border: 1px solid #eee; pointer-events: none; }
+    /* --- Filter Form --- */
+    .filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--color-border);
+    }
+    .filter-form .form-control {
+        background-color: var(--color-bg-light);
+        border-radius: var(--border-radius-md);
+        border: 1px solid var(--color-border);
+        padding: 14px;
+    }
+    .filter-form .form-control:focus {
+        background-color: white;
+        border-color: var(--color-primary-start);
+        box-shadow: 0 0 0 3px rgba(74, 0, 224, 0.15);
+        outline: none;
+    }
+    .filter-form .btn {
+        padding: 14px 24px;
+    }
+
+    /* --- Domain Table Styling --- */
+    .table-wrapper { overflow-x: auto; }
+    .domain-table { width: 100%; border-collapse: collapse; }
+    .domain-table th, .domain-table td {
+        padding: 1rem 1.5rem;
+        text-align: left;
+        border-bottom: 1px solid var(--color-border);
+        white-space: nowrap;
+    }
+    .domain-table th { font-weight: 600; font-size: 0.9rem; color: var(--color-text-muted); }
+    .domain-table td { font-weight: 500; color: var(--color-text-dark); }
+    .domain-table tr:last-child td { border-bottom: none; }
+
+    .domain-name { font-weight: 700; }
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+    .status-active { background-color: var(--status-active-bg); color: var(--status-active-fg); }
+    .status-suspended { background-color: var(--status-suspended-bg); color: var(--status-suspended-fg); }
+    .status-expired { background-color: var(--status-expired-bg); color: var(--status-expired-fg); }
+    .status-pending { background-color: var(--status-pending-bg); color: var(--status-pending-fg); }
+    .status-transferred-away { background-color: var(--status-transferred-away-bg); color: var(--status-transferred-away-fg); }
+    
+    .action-icons a {
+        font-size: 1.2rem;
+        color: var(--color-text-muted);
+        transition: color 0.3s ease;
+        padding: 5px;
+    }
+    .action-icons a:hover { color: var(--color-primary-start); }
+
+    /* --- Responsive Adjustments --- */
+    @media (max-width: 576px) {
+        .header-actions { width: 100%; flex-direction: column; }
+        .header-actions .btn { width: 100%; justify-content: center; }
+        .filter-form { flex-direction: column; }
+    }
 </style>
 
-<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
-    <h1>Selamat Datang, <%= user.name.split(' ')[0] %>!</h1>
-    <div style="display: flex; gap: 1rem;">
-        <a href="/dashboard/transfer-domain" class="btn btn-secondary"><i class="fas fa-exchange-alt"></i> Transfer Domain</a>
-        <a href="/dashboard/buy-domain" class="btn btn-primary"><i class="fas fa-plus"></i> Beli Domain Baru</a>
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="dashboard-header">
+        <h1>Selamat Datang, <%= user.name.split(' ')[0] %>!</h1>
+        <div class="header-actions">
+            <a href="/dashboard/transfer-domain" class="btn" style="background: white; border: 1px solid var(--color-border); color: var(--color-text-dark);"><i class="fas fa-exchange-alt"></i> Transfer Domain</a>
+            <a href="/dashboard/buy-domain" class="btn btn-primary"><i class="fas fa-plus"></i> Beli Domain Baru</a>
+        </div>
     </div>
-</div>
 
-<div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2><i class="fas fa-globe" style="margin-right: 10px; color: var(--nexus-primary);"></i>Domain Anda</h2>
-        <% if (pagination) { %>
-            <small>Menampilkan <%= pagination.from || 0 %> - <%= pagination.to || 0 %> dari <%= pagination.total %></small>
+    <div class="domain-list-card">
+        <div class="card-header">
+            <h2><i class="fas fa-globe-asia"></i>Domain Anda</h2>
+            <% if (pagination) { %>
+                <small>Menampilkan <%= pagination.from || 0 %> - <%= pagination.to || 0 %> dari <%= pagination.total %></small>
+            <% } %>
+        </div>
+
+        <form class="filter-form" method="GET" action="/dashboard">
+            <input type="text" name="name" class="form-control" placeholder="Cari nama domain..." value="<%= filters.name || '' %>" style="flex-grow: 1;">
+            <select name="status" class="form-control" style="width: auto;">
+                <option value="">Semua Status</option>
+                <option value="1" <%= filters.status == '1' ? 'selected' : '' %>>Aktif</option>
+                <option value="7" <%= filters.status == '7' ? 'selected' : '' %>>Suspended</option>
+                <option value="2" <%= filters.status == '2' ? 'selected' : '' %>>Expired</option>
+                <option value="0" <%= filters.status == '0' ? 'selected' : '' %>>Pending</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </form>
+        
+        <div class="table-wrapper">
+            <table class="domain-table">
+                <thead>
+                    <tr>
+                        <th>Nama Domain</th>
+                        <th>Status</th>
+                        <th>Tgl Registrasi</th>
+                        <th>Tgl Kedaluwarsa</th>
+                        <th style="text-align: right;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (domains && domains.length > 0) { %>
+                        <% domains.forEach(domain => { %>
+                            <tr>
+                                <td><strong class="domain-name"><%= domain.name %></strong></td>
+                                <td>
+                                    <span class="status-badge status-<%= (domain.status_desc || 'pending').toLowerCase().replace(/\s+/g, '-') %>">
+                                        <%= domain.status_desc %>
+                                    </span>
+                                </td>
+                                <td><%= domain.created_at ? new Date(domain.created_at).toLocaleDateString('id-ID') : 'N/A' %></td>
+                                <td>
+                                    <%= domain.expiry_date ? new Date(domain.expiry_date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Pending' %>
+                                </td>
+                                <td class="action-icons" style="text-align: right;">
+                                    <a href="/dashboard/domain/<%= domain.id %>/manage" title="Kelola Domain"><i class="fas fa-cog"></i></a>
+                                    <a href="/dashboard/domain/<%= domain.id %>/dns" title="DNS Manager"><i class="fas fa-dns"></i></a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="5" style="padding: 40px; text-align: center;">Tidak ada domain yang cocok dengan filter Anda, atau Anda belum memiliki domain.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <% if (pagination && pagination.last_page > 1) { %>
+            <nav class="pagination" aria-label="Page navigation" style="margin-top: 2rem;">
+                 <%- pagination.links.map(link => {
+                    if (!link.url) {
+                        const label = link.label.includes('laquo') ? '&laquo;' : (link.label.includes('raquo') ? '&raquo;' : link.label);
+                        return `<span class="disabled">${label}</span>`;
+                    }
+                    const url = new URL(link.url);
+                    const page = url.searchParams.get('page');
+                    const newUrl = `/dashboard?page=${page}&name=${filters.name || ''}&status=${filters.status || ''}`;
+                    const label = link.label.includes('laquo') ? '&laquo;' : (link.label.includes('raquo') ? '&raquo;' : link.label);
+                    return `<a href="${newUrl}" class="${link.active ? 'active' : ''}">${label}</a>`;
+                }).join('') %>
+            </nav>
         <% } %>
     </div>
-
-    <form class="filter-form" method="GET" action="/dashboard">
-        <input type="text" name="name" class="form-control" placeholder="Cari nama domain..." value="<%= filters.name || '' %>" style="flex-grow: 1;">
-        <select name="status" class="form-control" style="width: auto;">
-            <option value="">Semua Status</option>
-            <option value="1" <%= filters.status == '1' ? 'selected' : '' %>>Aktif</option>
-            <option value="7" <%= filters.status == '7' ? 'selected' : '' %>>Suspended</option>
-            <option value="2" <%= filters.status == '2' ? 'selected' : '' %>>Expired</option>
-            <option value="0" <%= filters.status == '0' ? 'selected' : '' %>>Pending</option>
-        </select>
-        <button type="submit" class="btn btn-primary">Filter</button>
-    </form>
-    
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Nama Domain</th>
-                    <th>Status</th>
-                    <th>Tanggal Registrasi</th>
-                    <th>Tanggal Kedaluwarsa</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (domains && domains.length > 0) { %>
-                    <% domains.forEach(domain => { %>
-                        <tr>
-                            <td><strong><%= domain.name %></strong></td>
-                            <td><span class="status-<%= (domain.status_desc || '').toLowerCase() %>"><%= domain.status_desc %></span></td>
-                            <td><%= new Date(domain.created_at).toLocaleDateString('id-ID') %></td>
-                            <td><%= new Date(domain.expiry_date).toLocaleDateString('id-ID') %></td>
-                            <td class="action-icons">
-                                <a href="/dashboard/domain/<%= domain.id %>/manage" title="Kelola Domain"><i class="fas fa-cog"></i></a>
-                                <a href="/dashboard/domain/<%= domain.id %>/dns" title="DNS Manager"><i class="fas fa-dns"></i></a>
-                            </td>
-                        </tr>
-                    <% }) %>
-                <% } else { %>
-                    <tr><td colspan="5" style="padding: 40px; text-align: center;">Tidak ada domain yang cocok dengan filter Anda, atau Anda belum memiliki domain.</td></tr>
-                <% } %>
-            </tbody>
-        </table>
-    </div>
-
-    <% if (pagination && pagination.last_page > 1) { %>
-        <nav class="pagination">
-            <%- pagination.links.map(link => {
-                let newUrl = link.url ? link.url.replace('/domains?', '/dashboard?') : '#';
-                if (link.label.includes('Previous')) {
-                    return `<a href="${newUrl}" class="${!link.url ? 'disabled' : ''}">&laquo;</a>`;
-                } else if (link.label.includes('Next')) {
-                    return `<a href="${newUrl}" class="${!link.url ? 'disabled' : ''}">&raquo;</a>`;
-                } else {
-                    return `<a href="${newUrl}" class="${link.active ? 'active' : ''}">${link.label}</a>`;
-                }
-            }).join('') %>
-        </nav>
-    <% } %>
 </div>
 
 <%- include('../partials/footer') %>

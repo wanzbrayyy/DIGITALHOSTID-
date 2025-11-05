@@ -1,0 +1,21 @@
+<%- include('../partials/header', { title: title }) %>
+
+<style>
+    .whois-pre {
+        background-color: #f9fafb;
+        padding: 1rem;
+        border-radius: var(--nexus-radius);
+        border: 1px solid #eee;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: 'Courier New', Courier, monospace;
+    }
+</style>
+
+<h1>Hasil WHOIS untuk: <span style="color: var(--nexus-primary-dark);"><%= domainName %></span></h1>
+
+<div class="card">
+    <pre class="whois-pre"><%= whoisData %></pre>
+</div>
+
+<%- include('../partials/footer') %>

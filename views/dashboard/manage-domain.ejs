@@ -1,83 +1,148 @@
-<%- include('../partials/header', { title: 'Kelola Domain' }) %>
+<%- include('../partials/header', { title: title }) %>
 
 <style>
-    .grid-2 {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
-        margin-top: 2rem;
+    /*
+    ============================================
+    --- MANAGE DOMAIN PAGE STYLING ---
+    ============================================
+    */
+    .page-header {
+        margin-bottom: 2.5rem;
     }
-    .detail-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 12px 0;
-        border-bottom: 1px solid #eee;
+    .page-header h1 {
+        font-size: clamp(2rem, 5vw, 2.8rem); font-weight: 800; margin-bottom: 0.5rem;
     }
-    .detail-item:last-child {
-        border-bottom: none;
+    .page-header h1 .domain-name-highlight {
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-    .status-badge {
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        color: white;
+
+    .manage-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+        gap: 2rem;
     }
-    .locked { background-color: var(--nexus-success); }
-    .unlocked { background-color: var(--nexus-warning); }
+    .manage-card {
+        background: white; border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-md); overflow: hidden;
+        display: flex; flex-direction: column;
+    }
+    .manage-card-header {
+        display: flex; align-items: center; gap: 12px; padding: 1.25rem 1.5rem;
+        background-color: var(--color-bg-light); border-bottom: 1px solid var(--color-border);
+    }
+    .manage-card-header i { font-size: 1.2rem; color: var(--color-primary-start); }
+    .manage-card-header h3 { margin: 0; font-size: 1.2rem; }
+    .manage-card-body { padding: 1.5rem; flex-grow: 1; }
+    .manage-card-body p { color: var(--color-text-muted); margin-bottom: 1.5rem; }
+    
+    .detail-item { 
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 1rem 0; border-bottom: 1px solid var(--color-border); 
+    }
+    .detail-item:last-child { border-bottom: none; }
+    .detail-item span { color: var(--color-text-muted); }
+    .detail-item strong { color: var(--color-text-dark); font-weight: 600; }
+    
+    /* Status Badges - Reused styles */
+    .status-badge { padding: 6px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: 600; text-transform: capitalize; }
+    .status-active { background-color: var(--status-active-bg, #e7f7f2); color: var(--status-active-fg, #0d8a59); }
+    .status-suspended { background-color: var(--status-suspended-bg, #feedee); color: var(--status-suspended-fg, #ef4444); }
+    .status-expired { background-color: var(--status-expired-bg, #fff8e8); color: var(--status-expired-fg, #f59e0b); }
+    .status-pending { background-color: var(--status-pending-bg, #eef3ff); color: var(--status-pending-fg, #4a00e0); }
+    .status-transferred-away { background-color: var(--status-transferred-away-bg, #f3f4f6); color: var(--status-transferred-away-fg, #4b5563); }
+
+    .status-lock { font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 50px; }
+    .locked { background-color: var(--status-active-bg, #e7f7f2); color: var(--status-active-fg, #0d8a59); }
+    .unlocked { background-color: var(--status-expired-bg, #fff8e8); color: var(--status-expired-fg, #f59e0b); }
+    
+    /* Forms inside cards */
+    .manage-card form .form-group { margin-bottom: 1rem; }
+    .manage-card form label { font-weight: 600; margin-bottom: 0.5rem; display: block; }
+    .manage-card form .form-control {
+        width: 100%; padding: 12px; border-radius: var(--border-radius-md);
+        background-color: var(--color-bg-light); border: 1px solid var(--color-border);
+    }
+    .manage-card form .btn { margin-top: 1rem; }
 </style>
 
-<h1>Kelola Domain: <span style="color: var(--nexus-primary-dark);"><%= domain.name %></span></h1>
-
-<div class="grid-2">
-    <div class="card">
-        <h3><i class="fas fa-info-circle"></i> Detail Domain</h3>
-        <div class="detail-item"><span>Status</span> <strong><%= domain.status_desc %></strong></div>
-        <div class="detail-item"><span>Dibuat</span> <strong><%= new Date(domain.created_at).toLocaleDateString('id-ID') %></strong></div>
-        <div class="detail-item"><span>Kedaluwarsa</span> <strong><%= new Date(domain.expiry_date).toLocaleDateString('id-ID') %></strong></div>
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="page-header">
+        <h1>Kelola Domain: <span class="domain-name-highlight"><%= domain.name %></span></h1>
     </div>
 
-    <div class="card">
-        <h3><i class="fas fa-server"></i> Nameserver</h3>
-        <% if (domain.nameservers && domain.nameservers.length > 0) { %>
-            <% domain.nameservers.forEach(ns => { %>
-                <div style="padding: 8px 0;"><%= ns.host %></div>
-            <% }) %>
-        <% } else { %>
-            <p>Nameserver belum diatur.</p>
-        <% } %>
-    </div>
-
-    <div class="card">
-        <h3><i class="fas fa-dns"></i> DNS Manager</h3>
-        <p>Kelola A, CNAME, MX, dan record lainnya untuk domain Anda.</p>
-        <a href="/dashboard/domain/<%= domain.id %>/dns" class="btn btn-primary" style="margin-top: 1rem;">Buka DNS Manager</a>
-    </div>
-
-    <div class="card">
-        <h3><i class="fas fa-lock"></i> Registrar Lock</h3>
-        <div class="detail-item">
-            <span>Status Lock</span>
-            <% if (domain.is_locked) { %>
-                <span class="status-badge locked">AKTIF</span>
-            <% } else { %>
-                <span class="status-badge unlocked">NONAKTIF</span>
-            <% } %>
+    <div class="manage-grid">
+        <div class="manage-card">
+            <div class="manage-card-header"><i class="fas fa-info-circle"></i><h3>Detail Domain</h3></div>
+            <div class="manage-card-body">
+                <div class="detail-item">
+                    <span>Status</span>
+                    <span class="status-badge status-<%= (domain.status_desc || 'pending').toLowerCase().replace(/\s+/g, '-') %>">
+                        <%= domain.status_desc %>
+                    </span>
+                </div>
+                <div class="detail-item"><span>Dibuat</span> <strong><%= domain.created_at ? new Date(domain.created_at).toLocaleDateString('id-ID', { dateStyle: 'long' }) : 'N/A' %></strong></div>
+                <div class="detail-item">
+                    <span>Kedaluwarsa</span>
+                    <strong><%= domain.expiry_date ? new Date(domain.expiry_date).toLocaleDateString('id-ID', { dateStyle: 'long' }) : 'Pending' %></strong>
+                </div>
+            </div>
         </div>
-        <form action="/dashboard/domain/<%= domain.id %>/toggle-lock" method="POST" style="margin-top: 1rem;" onsubmit="return confirm('Yakin ingin mengubah status lock domain ini?');">
-            <% if (domain.is_locked) { %>
-                <button type="submit" class="btn btn-secondary">Buka Kunci (Unlock)</button>
-            <% } else { %>
-                <button type="submit" class="btn btn-primary">Kunci (Lock)</button>
-            <% } %>
-        </form>
-    </div>
-    
-    <div class="card">
-        <h3><i class="fas fa-cogs"></i> Tindakan Lain</h3>
-        <p>Jika Anda belum menerima email verifikasi kontak, Anda bisa mengirimnya ulang.</p>
-        <form action="/dashboard/domain/<%= domain.id %>/resend-verification" method="POST" style="margin-top: 1rem;">
-            <button type="submit" class="btn btn-primary">Kirim Ulang Email Verifikasi</button>
-        </form>
+
+        <div class="manage-card">
+            <div class="manage-card-header"><i class="fas fa-server"></i><h3>Nameserver</h3></div>
+            <div class="manage-card-body">
+                <form action="/dashboard/domain/<%= domain.id %>/update-ns" method="POST">
+                    <div class="form-group"><label>Nameserver 1</label><input type="text" name="ns1" class="form-control" value="<%= (domain.nameservers && domain.nameservers[0]) ? domain.nameservers[0].host : '' %>" required></div>
+                    <div class="form-group"><label>Nameserver 2</label><input type="text" name="ns2" class="form-control" value="<%= (domain.nameservers && domain.nameservers[1]) ? domain.nameservers[1].host : '' %>" required></div>
+                    <div class="form-group"><label>Nameserver 3</label><input type="text" name="ns3" class="form-control" value="<%= (domain.nameservers && domain.nameservers[2]) ? domain.nameservers[2].host : '' %>"></div>
+                    <div class="form-group"><label>Nameserver 4</label><input type="text" name="ns4" class="form-control" value="<%= (domain.nameservers && domain.nameservers[3]) ? domain.nameservers[3].host : '' %>"></div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Update Nameserver</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="manage-card">
+            <div class="manage-card-header"><i class="fas fa-lock"></i><h3>Registrar Lock</h3></div>
+            <div class="manage-card-body">
+                <div class="detail-item">
+                    <span>Status Lock</span>
+                    <span class="status-lock <%= domain.is_locked ? 'locked' : 'unlocked' %>"><%= domain.is_locked ? 'AKTIF' : 'NONAKTIF' %></span>
+                </div>
+                <p style="margin-top: 1rem;">Aktifkan lock untuk mencegah transfer domain yang tidak sah.</p>
+                <form action="/dashboard/domain/<%= domain.id %>/toggle-lock" method="POST" style="margin-top: auto;" onsubmit="return confirm('Yakin ingin mengubah status lock?');">
+                    <button type="submit" class="btn <%= domain.is_locked ? 'btn-secondary' : 'btn-primary' %>" style="width: 100%;"><%= domain.is_locked ? 'Buka Kunci Domain' : 'Kunci Domain' %></button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="manage-card">
+            <div class="manage-card-header"><i class="fas fa-key"></i><h3>Kode Transfer (EPP)</h3></div>
+            <div class="manage-card-body">
+                <p>Gunakan kode ini untuk mentransfer domain Anda ke registrar lain.</p>
+                <div style="display: flex; gap: 1rem; margin-top: auto;">
+                    <a href="/dashboard/domain/<%= domain.id %>/auth-code" class="btn btn-primary" onclick="return confirm('Kode EPP akan ditampilkan di pesan notifikasi. Lanjutkan?')" style="flex:1;">Tampilkan Kode</a>
+                    <form action="/dashboard/domain/<%= domain.id %>/reset-auth-code" method="POST" onsubmit="return confirm('Anda yakin ingin mereset Auth Code? Kode lama akan hangus.')" style="flex:1;">
+                        <button type="submit" class="btn btn-secondary" style="width: 100%;">Reset Kode</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="manage-card">
+            <div class="manage-card-header"><i class="fas fa-dns"></i><h3>DNS Manager</h3></div>
+            <div class="manage-card-body" style="text-align: center;">
+                <p>Kelola A, CNAME, MX, dan record lainnya untuk domain Anda.</p>
+                <a href="/dashboard/domain/<%= domain.id %>/dns" class="btn btn-primary" style="margin-top: auto;">Buka DNS Manager</a>
+            </div>
+        </div>
+
+        <div class="manage-card">
+            <div class="manage-card-header"><i class="fas fa-user-secret"></i><h3>WHOIS Lookup</h3></div>
+            <div class="manage-card-body" style="text-align: center;">
+                <p>Periksa informasi WHOIS publik untuk domain ini.</p>
+                <a href="/dashboard/whois?domain=<%= domain.name %>" target="_blank" class="btn" style="background: white; border: 1px solid var(--color-border); color: var(--color-text-dark); margin-top: auto;">Lakukan WHOIS Lookup</a>
+            </div>
+        </div>
     </div>
 </div>
 

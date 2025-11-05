@@ -1,35 +1,209 @@
 <%- include('../partials/header', { title: 'Buat Tiket Baru' }) %>
 
-<h1><i class="fas fa-plus-circle"></i> Buat Tiket Bantuan Baru</h1>
-<p>Jelaskan masalah Anda secara rinci agar tim kami dapat membantu lebih cepat.</p>
+<style>
+    /*
+    ============================================
+    --- NEW TICKET PAGE STYLING ---
+    ============================================
+    */
+    .page-header {
+        margin-bottom: 2.5rem;
+    }
+    .page-header h1 {
+        font-size: clamp(2rem, 5vw, 2.8rem);
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .page-header h1 i {
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .page-header p {
+        font-size: 1.1rem;
+        color: var(--color-text-muted);
+        max-width: 600px;
+    }
+    
+    .ticket-form-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        align-items: flex-start;
+    }
 
-<div class="card">
-    <!-- **PERBARUI TAG FORM INI** -->
-    <form action="/dashboard/tickets/new" method="POST" enctype="multipart/form-data">
-        <div class="form-group">
-            <label for="subject">Subjek</label>
-            <input type="text" id="subject" name="subject" class="form-control" required placeholder="Contoh: Tidak bisa mengakses DNS Manager">
+    .form-main-card {
+        background-color: white;
+        border-radius: var(--border-radius-lg);
+        padding: 2.5rem;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    /* Form Styling */
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--color-text-dark);
+    }
+    .form-group .form-control {
+        width: 100%;
+        padding: 14px 18px;
+        border-radius: var(--border-radius-md);
+        background-color: var(--color-bg-light);
+        border: 1px solid var(--color-border);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    .form-group .form-control:focus {
+        background-color: white;
+        border-color: var(--color-primary-start);
+        box-shadow: 0 0 0 3px rgba(74, 0, 224, 0.15);
+        outline: none;
+    }
+    .form-group textarea.form-control {
+        min-height: 150px;
+        resize: vertical;
+    }
+
+    /* Custom File Input */
+    .form-group input[type="file"] {
+        background-color: white;
+        cursor: pointer;
+    }
+    .form-group input[type="file"]::file-selector-button {
+        padding: 12px 18px;
+        border-radius: var(--border-radius-md);
+        border: none;
+        background: var(--gradient-primary);
+        color: white;
+        font-weight: 600;
+        margin-right: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .form-group input[type="file"]::file-selector-button:hover {
+        opacity: 0.9;
+    }
+    .form-group small {
+        display: block;
+        margin-top: 0.5rem;
+        color: var(--color-text-muted);
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 16px;
+        font-size: 1.1rem;
+        margin-top: 1rem;
+    }
+
+    /* --- Sidebar Tips Card --- */
+    .sidebar-tips-card {
+        background-color: #eef3ff;
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        border: 1px solid var(--color-primary-start);
+    }
+    .sidebar-tips-card h3 {
+        font-size: 1.3rem;
+        margin-bottom: 1.5rem;
+        color: var(--color-text-dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .sidebar-tips-card h3 i {
+        color: var(--color-primary-start);
+    }
+    .sidebar-tips-card ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .sidebar-tips-card li {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 1rem;
+        color: var(--color-text-dark);
+        font-size: 0.95rem;
+    }
+    .sidebar-tips-card li i {
+        color: var(--color-success);
+        margin-top: 4px;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .ticket-form-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="page-header">
+        <h1><i class="fas fa-plus-circle"></i> Buat Tiket Bantuan Baru</h1>
+        <p>Jelaskan masalah Anda secara rinci agar tim kami dapat membantu lebih cepat dan akurat.</p>
+    </div>
+
+    <div class="ticket-form-layout">
+        <div class="form-main-card">
+            <form action="/dashboard/tickets/new" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="subject">Subjek</label>
+                    <input type="text" id="subject" name="subject" class="form-control" required placeholder="Contoh: Tidak bisa mengakses DNS Manager">
+                </div>
+                <div class="form-group">
+                    <label for="department">Departemen</label>
+                    <select id="department" name="department" class="form-control" required>
+                        <option value="Teknis">Dukungan Teknis</option>
+                        <option value="Billing">Penagihan (Billing)</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="message">Pesan</label>
+                    <textarea id="message" name="message" class="form-control" rows="8" required placeholder="Jelaskan kendala Anda di sini..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="attachment">Lampirkan Screenshot (Opsional)</label>
+                    <input type="file" name="attachment" id="attachment" class="form-control" accept="image/png, image/jpeg, image/gif">
+                    <small>Format yang diizinkan: JPG, PNG, GIF. Ukuran maksimal 2MB.</small>
+                </div>
+                <button type="submit" class="btn btn-primary btn-submit">Kirim Tiket</button>
+            </form>
         </div>
-        <div class="form-group">
-            <label for="department">Departemen</label>
-            <select id="department" name="department" class="form-control" required>
-                <option value="Teknis">Dukungan Teknis</option>
-                <option value="Billing">Penagihan (Billing)</option>
-                <option value="Lainnya">Lainnya</option>
-            </select>
+
+        <div class="sidebar-tips-card">
+            <h3><i class="fas fa-lightbulb"></i> Tips Mengisi Tiket</h3>
+            <ul>
+                <li>
+                    <i class="fas fa-check"></i>
+                    <div><strong>Subjek yang Jelas.</strong> Gunakan subjek yang singkat dan deskriptif.</div>
+                </li>
+                <li>
+                    <i class="fas fa-check"></i>
+                    <div><strong>Jelaskan Kronologi.</strong> Ceritakan langkah-langkah yang Anda lakukan sebelum masalah terjadi.</div>
+                </li>
+                <li>
+                    <i class="fas fa-check"></i>
+                    <div><strong>Sertakan Detail.</strong> Cantumkan nama domain, layanan, atau ID faktur yang terkait.</div>
+                </li>
+                <li>
+                    <i class="fas fa-check"></i>
+                    <div><strong>Pesan Error.</strong> Jika ada pesan error, salin dan tempel pesan tersebut secara lengkap.</div>
+                </li>
+                <li>
+                    <i class="fas fa-check"></i>
+                    <div><strong>Gunakan Screenshot.</strong> Sebuah gambar bisa menjelaskan lebih dari seribu kata.</div>
+                </li>
+            </ul>
         </div>
-        <div class="form-group">
-            <label for="message">Pesan</label>
-            <textarea id="message" name="message" class="form-control" rows="8" required placeholder="Jelaskan kendala Anda di sini..."></textarea>
-        </div>
-        <!-- **TAMBAHKAN INPUT FILE INI** -->
-        <div class="form-group">
-            <label for="attachment">Lampirkan Foto Laporan (Opsional)</label>
-            <input type="file" name="attachment" id="attachment" class="form-control" accept="image/png, image/jpeg, image/gif">
-            <small>Format yang diizinkan: JPG, PNG, GIF. Maks 2MB.</small>
-        </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%;">Kirim Tiket</button>
-    </form>
+    </div>
 </div>
 
 <%- include('../partials/footer') %>

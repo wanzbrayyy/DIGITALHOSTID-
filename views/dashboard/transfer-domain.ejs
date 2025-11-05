@@ -1,23 +1,74 @@
 <%- include('../partials/header', { title: 'Transfer Domain' }) %>
 
-<h1><i class="fas fa-exchange-alt"></i> Transfer Domain Masuk</h1>
-<p>Pindahkan domain Anda dari registrar lain ke DigitalHostID untuk pengelolaan yang lebih mudah.</p>
+<style>
+    /*
+    ============================================
+    --- TRANSFER DOMAIN PAGE STYLING ---
+    ============================================
+    */
+    .page-container {
+        padding-top: 4rem; padding-bottom: 4rem;
+        display: flex; justify-content: center; align-items: center; min-height: 80vh;
+    }
+    .form-card {
+        width: 100%; max-width: 650px; background-color: white;
+        border-radius: var(--border-radius-lg); padding: 2.5rem; box-shadow: var(--shadow-lg);
+    }
+    .form-card h1 {
+        font-size: 2.2rem; font-weight: 800; margin-bottom: 1rem;
+        display: flex; align-items: center; gap: 15px;
+    }
+    .form-card h1 i {
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .form-card p { font-size: 1.1rem; color: var(--color-text-muted); margin-bottom: 2.5rem; }
+    
+    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-text-dark); }
+    .form-group .form-control {
+        width: 100%; padding: 16px 20px; border-radius: var(--border-radius-md);
+        background-color: var(--color-bg-light); border: 1px solid var(--color-border);
+        font-size: 1rem; transition: all 0.3s ease;
+    }
+    .form-group .form-control:focus {
+        background-color: white; border-color: var(--color-primary-start);
+        box-shadow: 0 0 0 3px rgba(74, 0, 224, 0.15); outline: none;
+    }
+    
+    .info-box {
+        margin-top: 2rem; padding: 1.25rem; border-radius: var(--border-radius-md);
+        background-color: #fff8e8; border: 1px solid #fde68a; color: #f59e0b;
+        font-size: 0.9rem; display: flex; align-items: center; gap: 15px;
+    }
+    .info-box i { font-size: 1.5rem; }
+    
+    .btn-submit { width: 100%; padding: 18px; font-size: 1.1rem; margin-top: 2rem; }
+</style>
 
-<div class="card">
-    <form action="/dashboard/transfer-domain" method="POST">
-        <div class="form-group">
-            <label for="name">Nama Domain</label>
-            <input type="text" name="name" id="name" class="form-control" placeholder="contohdomain.com" required>
-        </div>
-        <div class="form-group">
-            <label for="auth_code">Kode EPP / Auth Code</label>
-            <input type="text" name="auth_code" id="auth_code" class="form-control" placeholder="Dapatkan dari registrar Anda saat ini" required>
-        </div>
-        <p style="color: #666; font-size: 0.9rem; border-left: 3px solid var(--nexus-warning); padding-left: 15px;">
-            <strong>Penting:</strong> Pastikan domain Anda sudah di-unlock (tidak dikunci) di registrar lama sebelum memulai proses transfer.
-        </p>
-        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Mulai Proses Transfer</button>
-    </form>
+<div class="container page-container">
+    <div class="form-card">
+        <h1><i class="fas fa-exchange-alt"></i> Transfer Domain</h1>
+        <p>Pindahkan domain Anda dari registrar lain ke DigitalHostID untuk pengelolaan yang lebih mudah.</p>
+        
+        <form action="/dashboard/transfer-domain" method="POST">
+            <div class="form-group">
+                <label for="name">Nama Domain</label>
+                <input type="text" name="name" id="name" class="form-control" placeholder="contohdomain.com" required>
+            </div>
+            <div class="form-group">
+                <label for="auth_code">Kode EPP / Auth Code</label>
+                <input type="text" name="auth_code" id="auth_code" class="form-control" placeholder="Dapatkan dari registrar Anda saat ini" required>
+            </div>
+
+            <div class="info-box">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <strong>Penting:</strong> Pastikan domain Anda sudah di-unlock (tidak dikunci) di registrar lama sebelum memulai proses transfer.
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-submit">Mulai Proses Transfer</button>
+        </form>
+    </div>
 </div>
 
 <%- include('../partials/footer') %>

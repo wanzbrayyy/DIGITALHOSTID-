@@ -1,75 +1,144 @@
 <%- include('../partials/header', { title: 'Program Afiliasi' }) %>
 
 <style>
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
-    .affiliate-link-input { width: 100%; padding: 12px 15px; border: 1px solid var(--nexus-border-color); border-radius: var(--nexus-radius); font-size: 1rem; background-color: #f9fafb; margin-top: 1rem; cursor: pointer; }
+    /*
+    ============================================
+    --- AFFILIATE PAGE STYLING ---
+    ============================================
+    */
+    .page-header {
+        margin-bottom: 2.5rem;
+    }
+    .page-header h1 {
+        font-size: clamp(2rem, 5vw, 2.8rem); font-weight: 800; margin-bottom: 0.5rem;
+        display: flex; align-items: center; gap: 15px;
+    }
+    .page-header h1 i {
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .page-header p { font-size: 1.1rem; color: var(--color-text-muted); max-width: 600px; }
+    .page-header strong { color: var(--color-primary-start); font-weight: 700; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    .card {
+        background-color: white; border-radius: var(--border-radius-lg);
+        padding: 2rem; box-shadow: var(--shadow-md); margin-bottom: 2rem;
+    }
+    .card h3 { font-size: 1.3rem; margin-bottom: 1rem; }
+    
+    /* Affiliate Link Card */
+    .affiliate-link-input {
+        width: 100%; padding: 14px 18px; border: 1px dashed var(--color-border);
+        border-radius: var(--border-radius-md); font-size: 1rem;
+        background-color: var(--color-bg-light); margin-top: 1rem; cursor: pointer;
+        text-align: center; font-weight: 600; color: var(--color-primary-start);
+    }
+    .affiliate-link-input:focus { outline: none; background-color: white; }
+
+    /* Balance Card */
+    .balance-card h2 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-top: 1rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Progress Card */
+    .progress-bar-container {
+        width: 100%; height: 24px; background-color: var(--color-bg-light);
+        border-radius: 50px; margin-top: 1rem; overflow: hidden;
+        border: 1px solid var(--color-border);
+    }
+    .progress-bar {
+        height: 100%;
+        background: var(--gradient-primary);
+        border-radius: 50px; text-align: center; color: white;
+        font-size: 0.9rem; font-weight: 600; line-height: 24px;
+        transition: width 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Referral History Table */
     .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--nexus-border-color); }
-    table th { font-weight: 600; background-color: #f9fafb; }
-    .status-pending { color: var(--nexus-warning); }
-    .status-credited { color: var(--nexus-success); font-weight: bold; }
-    .progress-bar-container { width: 100%; background-color: #eee; border-radius: 50px; margin-top: 1rem; }
-    .progress-bar { height: 20px; background-color: var(--nexus-success); border-radius: 50px; text-align: center; color: white; font-size: 0.8rem; line-height: 20px; transition: width 0.5s ease; }
+    .referral-table { width: 100%; border-collapse: collapse; }
+    .referral-table th, .referral-table td {
+        padding: 1rem 1.5rem; text-align: left; border-bottom: 1px solid var(--color-border);
+    }
+    .referral-table th { font-weight: 600; font-size: 0.9rem; color: var(--color-text-muted); }
+    .referral-table tr:last-child td { border-bottom: none; }
+    .status-pending { color: #f59e0b; font-weight: 600; }
+    .status-credited, .status-sukses { color: var(--color-success); font-weight: 600; }
+
+    @media (max-width: 768px) {
+        .grid-2 { grid-template-columns: 1fr; }
+    }
 </style>
 
-<h1><i class="fas fa-users"></i> Program Afiliasi</h1>
-<p>Dapatkan saldo sebesar <strong>Rp <%= milestoneReward.toLocaleString('id-ID') %></strong> setiap kali Anda berhasil mengajak <strong><%= milestoneCount %> orang</strong> untuk bergabung!</p>
-
-<div class="grid-2">
-    <div class="card">
-        <h3>Link Afiliasi Unik Anda</h3>
-        <p>Bagikan link di bawah ini untuk memulai.</p>
-        <input type="text" class="affiliate-link-input" value="<%= referralLink %>" readonly onclick="this.select()">
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="page-header">
+        <h1><i class="fas fa-users"></i> Program Afiliasi</h1>
+        <p>
+            Dapatkan saldo sebesar <strong>Rp <%= milestoneReward.toLocaleString('id-ID') %></strong> setiap kali Anda berhasil mengajak <strong><%= milestoneCount %> orang</strong> untuk bergabung!
+        </p>
     </div>
-     <div class="card">
-        <h3>Total Saldo Anda</h3>
-        <h2 style="font-size: 2.5rem; color: var(--nexus-success); margin-top: 1rem;">Rp <%= user.creditBalance.toLocaleString('id-ID') %></h2>
-    </div>
-</div>
 
-<div class="card">
-    <h3>Progress Payout Berikutnya</h3>
-    <p>
-        <% if (referralsNeeded === 0) { %>
-            <strong>Selamat!</strong> Anda telah mencapai target dan akan segera menerima reward.
-        <% } else { %>
-            Anda membutuhkan <strong><%= referralsNeeded %> referral lagi</strong> untuk mendapatkan reward.
-        <% } %>
-    </p>
-    <div class="progress-bar-container">
-        <% const progressPercentage = (pendingCount / milestoneCount) * 100; %>
-        <div class="progress-bar" style="width: <%= progressPercentage > 100 ? 100 : progressPercentage %>%;">
-            <%= pendingCount %> / <%= milestoneCount %>
+    <div class="grid-2">
+        <div class="card">
+            <h3>Link Afiliasi Unik Anda</h3>
+            <p>Bagikan link di bawah ini di media sosial, blog, atau kepada teman Anda.</p>
+            <input type="text" class="affiliate-link-input" value="<%= referralLink %>" readonly onclick="this.select()">
+        </div>
+         <div class="card balance-card">
+            <h3>Total Saldo Anda</h3>
+            <h2>Rp <%= user.creditBalance.toLocaleString('id-ID') %></h2>
         </div>
     </div>
-</div>
 
-<div class="card">
-    <h3>Riwayat Pengguna yang Anda Referensikan</h3>
-     <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Pengguna</th>
-                    <th>Tanggal Bergabung</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if(referrals && referrals.length > 0) { %>
-                    <% referrals.forEach(ref => { %>
-                        <tr>
-                            <td><%= ref.referredUser ? ref.referredUser.name : 'Pengguna Dihapus' %></td>
-                            <td><%= new Date(ref.createdAt).toLocaleDateString('id-ID') %></td>
-                            <td><span class="status-<%= ref.status %>"><%= ref.status === 'pending' ? 'Tertunda' : 'Sukses (Sudah Dihitung)' %></span></td>
-                        </tr>
-                    <% }) %>
-                <% } else { %>
-                    <tr><td colspan="3" style="text-align: center; padding: 20px;">Belum ada pengguna yang bergabung melalui link Anda.</td></tr>
-                <% } %>
-            </tbody>
-        </table>
+    <div class="card">
+        <h3>Progress Payout Berikutnya</h3>
+        <p>
+            <% if (referralsNeeded <= 0) { %>
+                <strong>Selamat!</strong> Anda telah mencapai target dan akan segera menerima reward.
+            <% } else { %>
+                Anda membutuhkan <strong><%= referralsNeeded %> referral lagi</strong> untuk mendapatkan reward berikutnya.
+            <% } %>
+        </p>
+        <div class="progress-bar-container">
+            <% const progressPercentage = (pendingCount / milestoneCount) * 100; %>
+            <div class="progress-bar" style="width: <%= progressPercentage > 100 ? 100 : progressPercentage %>%;">
+                <span><%= pendingCount %> / <%= milestoneCount %></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Riwayat Pengguna yang Anda Referensikan</h3>
+         <div class="table-wrapper">
+            <table class="referral-table">
+                <thead>
+                    <tr>
+                        <th>Pengguna</th>
+                        <th>Tanggal Bergabung</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if(referrals && referrals.length > 0) { %>
+                        <% referrals.forEach(ref => { %>
+                            <tr>
+                                <td><%= ref.referredUser ? ref.referredUser.name : 'Pengguna Dihapus' %></td>
+                                <td><%= new Date(ref.createdAt).toLocaleDateString('id-ID') %></td>
+                                <td><span class="status-<%= ref.status %>"><%= ref.status === 'pending' ? 'Tertunda' : 'Sukses' %></span></td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="3" style="text-align: center; padding: 20px;">Belum ada pengguna yang bergabung melalui link Anda.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

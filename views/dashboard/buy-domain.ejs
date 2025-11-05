@@ -1,71 +1,92 @@
 <%- include('../partials/header', { title: 'Beli Domain Baru' }) %>
 
 <style>
+    /*
+    ============================================
+    --- BUY DOMAIN PAGE STYLING ---
+    ============================================
+    */
+    .page-container {
+        padding-top: 4rem;
+        padding-bottom: 4rem;
+        display: flex;
+        justify-content: center;
+    }
+    .search-card {
+        width: 100%;
+        max-width: 800px;
+        background-color: white;
+        border-radius: var(--border-radius-lg);
+        padding: 2.5rem;
+        box-shadow: var(--shadow-lg);
+    }
+    .search-card h2 {
+        text-align: center;
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+    }
+    .search-card h2 i {
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .search-card p {
+        text-align: center;
+        font-size: 1.1rem;
+        color: var(--color-text-muted);
+        margin-bottom: 2.5rem;
+    }
+    
+    /* --- Domain Search Form (reused from index) --- */
     #domain-search-form {
         display: flex;
-        box-shadow: var(--nexus-shadow);
+        max-width: 700px;
+        margin: 2rem auto 0 auto;
         border-radius: 50px;
-        margin-top: 1rem;
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
     }
     #domain-input {
-        flex-grow: 1;
-        padding: 16px 25px;
-        border: 1px solid var(--nexus-border-color);
-        font-size: 1rem;
-        border-radius: 50px 0 0 50px;
-        outline: none;
-        border-right: none;
+        flex-grow: 1; padding: 20px 30px; border: none;
+        font-size: 1.1rem; outline: none; color: var(--color-text-dark);
     }
     #domain-search-button {
-        padding: 16px 30px;
-        border-radius: 0 50px 50px 0;
-        background: var(--nexus-secondary);
-        color: white;
-        border: none;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 600;
+        padding: 0 35px; background: var(--gradient-secondary); color: white;
+        border: none; cursor: pointer; font-size: 1.1rem; font-weight: 600;
     }
-    #domain-results { margin-top: 2rem; }
+    
+    /* --- Domain Search Results --- */
+    #domain-results { margin-top: 2.5rem; }
+    .result-list { list-style: none; padding: 0; }
     .result-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-        margin-bottom: 1rem;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+        background-color: #fcfcff;
+        border-radius: var(--border-radius-md);
+        border: 1px solid var(--color-border);
     }
-    .domain-name {
-        font-weight: 600;
-        font-size: 1.1rem;
-    }
-    .status-available {
-        color: var(--nexus-success);
-        font-weight: 600;
-        margin-right: 1rem;
-    }
-    .status-taken {
-        color: var(--nexus-text-gray);
-    }
-    .spinner {
-        border: 4px solid rgba(0,0,0,0.1);
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        border-left-color: var(--nexus-secondary);
-        animation: spin 1s ease infinite;
-        margin: 20px auto;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .domain-name { font-weight: 700; font-size: 1.2rem; color: var(--color-text-dark); }
+    .status-available { color: var(--color-success); font-weight: 600; margin-right: 1rem; }
+    .status-taken { color: var(--color-text-muted); font-weight: 500; }
 </style>
 
-<div class="card" style="max-width: 800px; margin: 0 auto;">
-    <h2><i class="fas fa-search"></i> Cari Domain Baru</h2>
-    <p>Wujudkan ide Anda dengan nama domain yang sempurna.</p>
-    <form id="domain-search-form">
-        <input type="text" id="domain-input" class="form-control" placeholder="contoh: wanzofc" required>
-        <button type="submit" id="domain-search-button" class="btn btn-secondary">Cari</button>
-    </form>
-    <div id="domain-results" style="margin-top: 2rem;"></div>
+<div class="container page-container">
+    <div class="search-card">
+        <h2><i class="fas fa-search"></i> Cari Domain Baru</h2>
+        <p>Wujudkan ide Anda dengan nama domain yang sempurna.</p>
+        
+        <form id="domain-search-form">
+            <input type="text" id="domain-input" class="form-control" placeholder="contoh: wanzofc" required>
+            <button type="submit" id="domain-search-button" class="btn btn-secondary">Cari</button>
+        </form>
+
+        <div id="domain-results"></div>
+    </div>
 </div>
 
 <script>
@@ -78,15 +99,20 @@
             e.preventDefault();
             const keyword = domainInput.value.trim();
             if (!keyword) {
-                domainResults.innerHTML = `<p style="text-align: center; color: var(--nexus-danger);">Harap masukkan nama domain.</p>`;
+                domainResults.innerHTML = `<p style="text-align: center; color: var(--color-danger);">Harap masukkan nama domain.</p>`;
                 return;
             }
             domainResults.innerHTML = '<div class="spinner"></div>';
             try {
-                const response = await fetch('/check-domain', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keyword: keyword }) });
+                const response = await fetch('/check-domain', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keyword: keyword })
+                });
                 if (!response.ok) throw new Error('Network error');
+                
                 const results = await response.json();
-                let resultsHTML = '<ul style="list-style: none; padding: 0;">';
+                let resultsHTML = '<ul class="result-list">';
                 results.forEach(result => {
                     let statusHTML = '';
                     if (result.error) {
@@ -97,12 +123,13 @@
                     } else {
                         statusHTML = `<span class="status-taken">Sudah Diambil</span>`;
                     }
-                    resultsHTML += `<li class="card result-item"><span class="domain-name">${result.name}</span> ${statusHTML}</li>`;
+                    resultsHTML += `<li class="result-item"><span class="domain-name">${result.name}</span> ${statusHTML}</li>`;
                 });
                 resultsHTML += '</ul>';
                 domainResults.innerHTML = resultsHTML;
+
             } catch (error) {
-                domainResults.innerHTML = `<p style="text-align: center; color: var(--nexus-danger);">Terjadi kesalahan pada koneksi.</p>`;
+                domainResults.innerHTML = `<p style="text-align: center; color: var(--color-danger);">Terjadi kesalahan pada koneksi.</p>`;
             }
         });
     });
