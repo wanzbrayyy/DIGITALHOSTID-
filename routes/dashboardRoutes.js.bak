@@ -35,9 +35,7 @@ router.post('/dashboard/domain/:id/dns/create', dashboardController.createDnsRec
 router.post('/dashboard/domain/:id/dns/delete', dashboardController.deleteDnsRecord);
 
 router.post('/dashboard/domain/:id/update-ns', dashboardController.updateNameservers);
-// ... (rute lain)
 router.get('/dashboard/domain/:id/auth-code', dashboardController.getAuthCode);
-router.post('/dashboard/domain/:id/reset-auth-code', dashboardController.resetAuthCode);
 router.get('/dashboard/whois', dashboardController.lookupWhois);
 router.get('/dashboard/settings', dashboardController.getSettingsPage);
 router.post('/dashboard/settings', upload.single('profilePicture'), dashboardController.updateSettings);
