@@ -1,30 +1,69 @@
 <%- include('../partials/header', { title: title }) %>
-<h1>Kelola Status Sistem</h1>
-<div class="card">
-    <h2>Update Status Layanan</h2>
-    <% services.forEach(service => { %>
-    <form action="/admin/system-status/update" method="POST" style="border-bottom: 1px solid #eee; padding-bottom: 1rem; margin-bottom: 1rem;">
-        <input type="hidden" name="serviceId" value="<%= service._id %>">
-        <h4><%= service.name %></h4>
-        <div class="form-group">
-            <label>Status</label>
-            <select name="status" class="form-control">
-                <option <%= service.status === 'Operational' ? 'selected' : '' %>>Operational</option>
-                <option <%= service.status === 'Maintenance' ? 'selected' : '' %>>Maintenance</option>
-                <option <%= service.status === 'Degraded Performance' ? 'selected' : '' %>>Degraded Performance</option>
-                <option <%= service.status === 'Outage' ? 'selected' : '' %>>Outage</option>
-            </select>
-        </div>
-        <div class="form-group"><label>Deskripsi</label><input type="text" name="description" value="<%= service.description %>" class="form-control"></div>
-        <button type="submit" class="btn btn-sm btn-primary">Update</button>
-    </form>
-    <% }) %>
+
+<style>
+    .page-header { margin-bottom: 2.5rem; }
+    .page-header h1 {
+        font-size: 2.8rem; font-weight: 800; display: flex; align-items: center; gap: 15px;
+    }
+    .page-header h1 i {
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    
+    .card {
+        background-color: white; border-radius: var(--border-radius-lg);
+        padding: 2.5rem; box-shadow: var(--shadow-lg); margin-bottom: 2rem;
+    }
+    .card h2 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+
+    .service-update-form {
+        border-bottom: 1px solid var(--color-border);
+        padding-bottom: 2rem; margin-bottom: 2rem;
+    }
+    .service-update-form:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .service-update-form h4 { font-size: 1.2rem; margin-bottom: 1rem; }
+</style>
+
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="page-header">
+        <h1><i class="fas fa-server"></i> Kelola Status Sistem</h1>
+    </div>
+
+    <div class="card">
+        <h2>Update Status Layanan</h2>
+        <% services.forEach(service => { %>
+        <form action="/admin/system-status/update" method="POST" class="service-update-form">
+            <input type="hidden" name="serviceId" value="<%= service._id %>">
+            <h4><%= service.name %></h4>
+            <div class="grid-2" style="gap: 1.5rem;">
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status" class="form-control">
+                        <option <%= service.status === 'Operational' ? 'selected' : '' %>>Operational</option>
+                        <option <%= service.status === 'Maintenance' ? 'selected' : '' %>>Maintenance</option>
+                        <option <%= service.status === 'Degraded Performance' ? 'selected' : '' %>>Degraded Performance</option>
+                        <option <%= service.status === 'Outage' ? 'selected' : '' %>>Outage</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <input type="text" name="description" value="<%= service.description %>" class="form-control">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-sm btn-primary">Update</button>
+        </form>
+        <% }) %>
+    </div>
+
+    <div class="card">
+        <h2>Tambah Layanan Baru</h2>
+        <form action="/admin/system-status/update" method="POST">
+            <div class="form-group">
+                <label>Nama Layanan</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Tambah Layanan</button>
+        </form>
+    </div>
 </div>
-<div class="card">
-    <h2>Tambah Layanan Baru</h2>
-    <form action="/admin/system-status/update" method="POST">
-        <div class="form-group"><label>Nama Layanan</label><input type="text" name="name" class="form-control" required></div>
-        <button type="submit" class="btn btn-primary">Tambah Layanan</button>
-    </form>
-</div>
+
 <%- include('../partials/footer') %>

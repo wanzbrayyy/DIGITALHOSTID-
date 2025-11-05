@@ -1,45 +1,101 @@
 <%- include('../partials/header', { title: 'Manajemen Tiket' }) %>
 
-<h1><i class="fas fa-life-ring"></i> Manajemen Tiket Bantuan</h1>
-<p>Kelola semua tiket bantuan yang dikirimkan oleh pengguna.</p>
+<style>
+    /*
+    ============================================
+    --- ADMIN TICKET LIST PAGE STYLING ---
+    ============================================
+    */
+    :root {
+        --status-buka-bg: #e7f7f2; --status-buka-fg: #0d8a59;
+        --status-dijawab-bg: #fff8e8; --status-dijawab-fg: #f59e0b;
+        --status-ditutup-bg: #f3f4f6; --status-ditutup-fg: #4b5563;
+    }
+    .page-header {
+        margin-bottom: 2.5rem;
+    }
+    .page-header h1 {
+        font-size: clamp(2rem, 5vw, 2.8rem); font-weight: 800; margin-bottom: 0.5rem;
+        display: flex; align-items: center; gap: 15px;
+    }
+    .page-header h1 i {
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .page-header p { font-size: 1.1rem; color: var(--color-text-muted); max-width: 600px; }
+    
+    .ticket-list-card {
+        background-color: white;
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    /* Table Styling */
+    .table-wrapper { overflow-x: auto; }
+    .ticket-table { width: 100%; border-collapse: collapse; }
+    .ticket-table th, .ticket-table td {
+        padding: 1rem 1.5rem; text-align: left;
+        border-bottom: 1px solid var(--color-border);
+    }
+    .ticket-table th {
+        font-weight: 600; font-size: 0.9rem; color: var(--color-text-muted);
+        background-color: var(--color-bg-light);
+    }
+    .ticket-table tr:last-child td { border-bottom: none; }
+    
+    .status-badge {
+        padding: 6px 12px; border-radius: 50px;
+        font-size: 0.8rem; font-weight: 600; text-align: center;
+    }
+    .status-buka { background-color: var(--status-buka-bg); color: var(--status-buka-fg); }
+    .status-dijawab { background-color: var(--status-dijawab-bg); color: var(--status-dijawab-fg); }
+    .status-ditutup { background-color: var(--status-ditutup-bg); color: var(--status-ditutup-fg); }
+</style>
 
-<div class="card">
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Subjek</th>
-                    <th>Pengguna</th>
-                    <th>Departemen</th>
-                    <th>Status</th>
-                    <th>Update Terakhir</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (tickets && tickets.length > 0) { %>
-                    <% tickets.forEach(ticket => { %>
-                        <tr>
-                            <td><strong><%= ticket.subject %></strong></td>
-                            <td><%= ticket.user.name %></td>
-                            <td><%= ticket.department %></td>
-                            <td><span class="status-<%= ticket.status.toLowerCase() %>"><%= ticket.status %></span></td>
-                            <td><%= new Date(ticket.updatedAt).toLocaleString('id-ID') %></td>
-                            <td><a href="/admin/tickets/<%= ticket._id %>" class="btn btn-secondary btn-sm">Lihat</a></td>
-                        </tr>
-                    <% }) %>
-                <% } else { %>
-                    <tr><td colspan="6" style="text-align: center; padding: 20px;">Tidak ada tiket yang ditemukan.</td></tr>
-                <% } %>
-            </tbody>
-        </table>
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="page-header">
+        <h1><i class="fas fa-life-ring"></i> Manajemen Tiket</h1>
+        <p>Kelola semua tiket bantuan yang dikirimkan oleh pengguna.</p>
+    </div>
+
+    <div class="ticket-list-card">
+        <div class="table-wrapper">
+            <table class="ticket-table">
+                <thead>
+                    <tr>
+                        <th>Subjek</th>
+                        <th>Pengguna</th>
+                        <th>Departemen</th>
+                        <th>Status</th>
+                        <th>Update Terakhir</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (tickets && tickets.length > 0) { %>
+                        <% tickets.forEach(ticket => { %>
+                            <tr>
+                                <td><strong><%= ticket.subject %></strong></td>
+                                
+                                <!-- 
+                                    FIX: Check if ticket.user exists before accessing its 'name' property.
+                                    This prevents the "Cannot read properties of null" error.
+                                -->
+                                <td><%= ticket.user ? ticket.user.name : 'Pengguna Dihapus' %></td>
+                                
+                                <td><%= ticket.department %></td>
+                                <td><span class="status-badge status-<%= ticket.status.toLowerCase() %>"><%= ticket.status %></span></td>
+                                <td><%= new Date(ticket.updatedAt).toLocaleString('id-ID') %></td>
+                                <td><a href="/admin/tickets/<%= ticket._id %>" class="btn btn-secondary btn-sm">Lihat</a></td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="6" style="text-align: center; padding: 40px;">Tidak ada tiket yang ditemukan.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
-
-<style>
-    .status-buka { color: var(--nexus-success); font-weight: bold; }
-    .status-dijawab { color: var(--nexus-warning); font-weight: bold; }
-    .status-ditutup { color: var(--nexus-text-gray); }
-</style>
 
 <%- include('../partials/footer') %>

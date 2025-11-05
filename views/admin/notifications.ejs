@@ -1,35 +1,68 @@
 <%- include('../partials/header', { title: 'Kirim Notifikasi' }) %>
 
-<h1><i class="fas fa-paper-plane"></i> Kirim Notifikasi ke Pengguna</h1>
-<p>Kirim pesan, update, atau promo langsung ke lonceng notifikasi pengguna.</p>
+<style>
+    .page-header { margin-bottom: 2.5rem; }
+    .page-header h1 {
+        font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem;
+        display: flex; align-items: center; gap: 15px;
+    }
+    .page-header h1 i {
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .page-header p { font-size: 1.1rem; color: var(--color-text-muted); max-width: 600px; }
+    
+    .form-card {
+        max-width: 700px; margin: 0 auto;
+        background-color: white; border-radius: var(--border-radius-lg);
+        padding: 2.5rem; box-shadow: var(--shadow-lg);
+    }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+    .form-control {
+        width: 100%; padding: 14px 18px; border-radius: var(--border-radius-md);
+        background-color: var(--color-bg-light); border: 1px solid var(--color-border);
+        font-size: 1rem; transition: all 0.3s ease;
+    }
+    .form-control:focus {
+        background-color: white; border-color: var(--color-primary-start);
+        box-shadow: 0 0 0 3px rgba(74, 0, 224, 0.15); outline: none;
+    }
+    .btn-submit { width: 100%; padding: 16px; font-size: 1.1rem; margin-top: 1.5rem; }
+</style>
 
-<div class="card">
-    <form action="/admin/notifications/send" method="POST">
-        <div class="form-group">
-            <label for="userId">Kirim Ke:</label>
-            <select name="userId" id="userId" class="form-control" required>
-                <option value="" disabled selected>-- Pilih Pengguna --</option>
-                <% users.forEach(targetUser => { %>
-                    <option value="<%= targetUser._id %>"><%= targetUser.name %> (<%= targetUser.email %>)</option>
-                <% }) %>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="title">Judul Notifikasi</label>
-            <input type="text" name="title" id="title" class="form-control" required placeholder="Contoh: Perpanjangan Domain Anda">
-        </div>
-        <div class="form-group">
-            <label for="message">Pesan Singkat</label>
-            <textarea name="message" id="message" class="form-control" rows="3" required placeholder="Contoh: Domain example.com akan segera kedaluwarsa."></textarea>
-        </div>
-        <div class="form-group">
-            <label for="link">Link Tujuan (saat diklik)</label>
-            <input type="text" name="link" id="link" class="form-control" placeholder="Contoh: /dashboard/domain/12345/manage">
-        </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%;">
-            <i class="fas fa-paper-plane"></i> Kirim Notifikasi
-        </button>
-    </form>
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="page-header">
+        <h1><i class="fas fa-paper-plane"></i> Kirim Notifikasi</h1>
+        <p>Kirim pesan, update, atau promo langsung ke lonceng notifikasi pengguna.</p>
+    </div>
+
+    <div class="form-card">
+        <form action="/admin/notifications/send" method="POST">
+            <div class="form-group">
+                <label for="userId">Kirim Ke:</label>
+                <select name="userId" id="userId" class="form-control" required>
+                    <option value="" disabled selected>-- Pilih Pengguna --</option>
+                    <% users.forEach(targetUser => { %>
+                        <option value="<%= targetUser._id %>"><%= targetUser.name %> (<%= targetUser.email %>)</option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="title">Judul Notifikasi</label>
+                <input type="text" name="title" id="title" class="form-control" required placeholder="Contoh: Perpanjangan Domain Anda">
+            </div>
+            <div class="form-group">
+                <label for="message">Pesan Singkat</label>
+                <textarea name="message" id="message" class="form-control" rows="3" required placeholder="Contoh: Domain example.com akan segera kedaluwarsa."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="link">Link Tujuan (opsional)</label>
+                <input type="text" name="link" id="link" class="form-control" placeholder="Contoh: /dashboard/domain/12345/manage">
+            </div>
+            <button type="submit" class="btn btn-primary btn-submit">
+                <i class="fas fa-paper-plane"></i> Kirim Notifikasi
+            </button>
+        </form>
+    </div>
 </div>
 
 <%- include('../partials/footer') %>

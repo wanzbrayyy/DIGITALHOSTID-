@@ -1,80 +1,142 @@
 <%- include('../partials/header', { title: 'Pengaturan Harga' }) %>
 
-<h1><i class="fas fa-dollar-sign"></i> Pengaturan Harga</h1>
-<p>Atur harga jual custom untuk domain dan layanan lainnya. Harga custom akan menimpa harga promo dan harga normal dari API.</p>
+<style>
+    /*
+    ============================================
+    --- ADMIN PRICING SETTINGS PAGE STYLING ---
+    ============================================
+    */
+    .page-header {
+        margin-bottom: 2.5rem;
+    }
+    .page-header h1 {
+        font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem;
+        display: flex; align-items: center; gap: 15px;
+    }
+    .page-header h1 i {
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .page-header p { font-size: 1.1rem; color: var(--color-text-muted); max-width: 700px; }
+    
+    .card {
+        background-color: white; border-radius: var(--border-radius-lg);
+        padding: 2.5rem; box-shadow: var(--shadow-lg); margin-bottom: 2rem;
+    }
+    .card h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .card p { color: var(--color-text-muted); margin-top: 0; margin-bottom: 1.5rem; }
+    
+    /* Form & Table Styling */
+    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+    .form-control {
+        width: 100%; padding: 12px 16px; border-radius: var(--border-radius-md);
+        background-color: var(--color-bg-light); border: 1px solid var(--color-border);
+        font-size: 1rem; transition: all 0.3s ease;
+    }
+    .form-control:focus {
+        background-color: white; border-color: var(--color-primary-start);
+        box-shadow: 0 0 0 3px rgba(74, 0, 224, 0.15); outline: none;
+    }
 
-<div class="grid-2">
+    .pricing-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    .pricing-table th, .pricing-table td {
+        padding: 1rem 1.5rem; text-align: left;
+        border-bottom: 1px solid var(--color-border);
+    }
+    .pricing-table th {
+        font-weight: 600; font-size: 0.9rem; color: var(--color-text-muted);
+        background-color: var(--color-bg-light);
+    }
+    .pricing-table tr:last-child td { border-bottom: none; }
+    .pricing-table td .form-control { padding: 10px 14px; font-size: 0.9rem; }
+</style>
+
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="page-header">
+        <h1><i class="fas fa-dollar-sign"></i> Pengaturan Harga</h1>
+        <p>Atur harga jual custom untuk domain dan layanan lainnya. Harga custom akan menimpa harga promo dan harga normal dari API.</p>
+    </div>
+
     <div class="card">
         <h2>Harga Proteksi WHOIS</h2>
         <form action="/admin/settings-harga/update" method="POST">
             <input type="hidden" name="setting_type" value="whois">
-            <div class="form-group">
+            <div class="form-group" style="max-width: 300px;">
                 <label for="whois_price">Harga (angka saja)</label>
-                <input type="number" name="whois_price" class="form-control" value="<%= whoisPrice %>">
+                <input type="number" name="whois_price" id="whois_price" class="form-control" value="<%= whoisPrice %>">
             </div>
             <button type="submit" class="btn btn-primary">Update Harga WHOIS</button>
         </form>
     </div>
+
     <div class="card">
         <h2>Harga Custom TLD Domain</h2>
-        <form action="/admin/settings-harga/update" method="POST" style="display: flex; gap: 1rem; align-items: flex-end;">
-            <input type="hidden" name="setting_type" value="tld">
-            <div class="form-group" style="flex-grow: 1; margin:0;">
-                <label>TLD (cth: com, co.id)</label>
-                <input type="text" name="tld" class="form-control" placeholder="com" required>
+        <p>Kosongkan harga untuk menggunakan harga default/promo dari API. Harga yang diisi akan menjadi harga jual final.</p>
+        <form action="/admin/settings-harga/update" method="POST">
+            <input type="hidden" name="setting_type" value="tld_bulk">
+            <div class="table-wrapper">
+                <table class="pricing-table">
+                    <thead>
+                        <tr>
+                            <th>Ekstensi</th>
+                            <th>Harga API (Normal)</th>
+                            <th>Harga Jual Custom Anda (IDR)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (allTldsFromApi && allTldsFromApi.length > 0) { %>
+                            <% allTldsFromApi.forEach(item => { %>
+                                <tr>
+                                    <td><strong>.<%= item.tld %></strong></td>
+                                    <td>Rp <%= parseInt(item.apiPrice).toLocaleString('id-ID') %></td>
+                                    <td>
+                                        <input type="number" name="tld_prices[<%= item.tld %>]" class="form-control" placeholder="Gunakan harga API" value="<%= tldPrices[item.tld] || '' %>">
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr><td colspan="3" style="text-align:center; padding: 2rem;">Gagal memuat daftar TLD dari API.</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
             </div>
-            <div class="form-group" style="flex-grow: 1; margin:0;">
-                <label>Harga Jual (cth: 150000)</label>
-                <input type="number" name="price" class="form-control" placeholder="150000" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Update</button>
+            <button type="submit" class="btn btn-primary" style="margin-top: 2rem;">Simpan Semua Harga TLD</button>
         </form>
-        <hr>
-        <h4>Harga Custom Saat Ini:</h4>
-        <% if (Object.keys(tldPrices).length > 0) { %>
-            <% Object.entries(tldPrices).forEach(([tld, price]) => { %>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee;">
-                    <span>.<%= tld %></span>
-                    <strong>Rp <%= price.toLocaleString('id-ID') %></strong>
-                    <form action="/admin/settings-harga/update" method="POST">
-                        <input type="hidden" name="setting_type" value="tld_remove">
-                        <input type="hidden" name="remove_tld" value="<%= tld %>">
-                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 2px 8px;">&times;</button>
-                    </form>
-                </div>
-            <% }) %>
-        <% } else { %>
-            <p style="text-align: center; color: var(--nexus-text-gray);">Belum ada harga custom yang diatur.</p>
-        <% } %>
+    </div>
+
+    <div class="card">
+        <h2>Harga Custom SSL</h2>
+        <p>Isi harga custom untuk produk SSL. Kosongkan untuk menggunakan harga default dari API.</p>
+        <form action="/admin/settings-harga/update" method="POST">
+            <input type="hidden" name="setting_type" value="ssl">
+            <div class="table-wrapper">
+                <table class="pricing-table">
+                    <thead>
+                        <tr>
+                            <th>Nama Produk SSL</th>
+                            <th>Harga Custom (IDR)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (sslApiProducts && sslApiProducts.length > 0) { %>
+                            <% sslApiProducts.forEach(product => { %>
+                                <tr>
+                                    <td><%= product.name %></td>
+                                    <td>
+                                        <div class="form-group" style="margin:0;">
+                                            <input type="number" name="ssl_prices[<%= product.name %>]" class="form-control" placeholder="Gunakan harga API" value="<%= sslPrices[product.name] || '' %>">
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                             <tr><td colspan="2" style="text-align:center; padding: 2rem;">Gagal memuat daftar produk SSL dari API.</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top: 2rem;">Simpan Semua Harga SSL</button>
+        </form>
     </div>
 </div>
-<div class="card">
-    <h2>Harga Custom SSL</h2>
-    <p>Isi harga custom untuk produk SSL. Kosongkan untuk menggunakan harga default dari API.</p>
-    <form action="/admin/settings-harga/update" method="POST">
-        <input type="hidden" name="setting_type" value="ssl">
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr><th>Nama Produk SSL</th><th>Harga Custom (IDR)</th></tr>
-                </thead>
-                <tbody>
-                    <% if (sslApiProducts && sslApiProducts.length > 0) { %>
-                        <% sslApiProducts.forEach(product => { %>
-                            <tr>
-                                <td><%= product.name %></td>
-                                <td>
-                                    <div class="form-group" style="margin:0;">
-                                        <input type="number" name="ssl_prices[<%= product.name %>]" class="form-control" placeholder="Gunakan harga API" value="<%= sslPrices[product.name] || '' %>">
-                                    </div>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
-        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Simpan Semua Harga SSL</button>
-    </form>
-</div>
+
 <%- include('../partials/footer') %>

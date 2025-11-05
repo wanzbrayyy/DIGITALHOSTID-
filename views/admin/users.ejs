@@ -1,49 +1,109 @@
 <%- include('../partials/header', { title: 'Manajemen Pengguna' }) %>
 
-<h1><i class="fas fa-users-cog"></i> Manajemen Pengguna</h1>
-<p>Kelola semua pengguna yang terdaftar di sistem.</p>
+<style>
+    /*
+    ============================================
+    --- ADMIN USERS PAGE STYLING ---
+    ============================================
+    */
+    .page-header { margin-bottom: 2.5rem; }
+    .page-header h1 {
+        font-size: 2.8rem; font-weight: 800; display: flex; align-items: center; gap: 15px;
+    }
+    .page-header h1 i {
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .page-header p { font-size: 1.1rem; color: var(--color-text-muted); max-width: 600px; }
 
-<div class="card">
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Nama</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (users && users.length > 0) { %>
-                    <% users.forEach(u => { %>
-                        <tr>
-                            <td><%= u.name %></td>
-                            <td><%= u.email %></td>
-                            <td>
-                                <% if (u.email === user.email) { %>
-                                    <span class="btn btn-sm" style="background: #ccc; pointer-events: none;"><%= u.role %></span>
-                                <% } else { %>
-                                    <form action="/admin/users/<%= u._id %>/update-role" method="POST">
-                                        <select name="role" onchange="this.form.submit()" class="form-control" style="width: auto; padding: 8px 12px;">
-                                            <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>User</option>
-                                            <option value="support" <%= u.role === 'support' ? 'selected' : '' %>>Support</option>
-                                            <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>Admin</option>
-                                        </select>
-                                    </form>
-                                <% } %>
-                            </td>
-                            <td>
-                                <a href="#" class="btn btn-secondary btn-sm disabled" title="Coming soon">Edit</a>
-                            </td>
-                        </tr>
-                    <% }) %>
-                <% } else { %>
-                    <tr><td colspan="4" style="text-align: center; padding: 20px;">Tidak ada pengguna yang ditemukan.</td></tr>
-                <% } %>
-            </tbody>
-        </table>
+    .users-card {
+        background-color: white; border-radius: var(--border-radius-lg);
+        padding: 2rem; box-shadow: var(--shadow-lg);
+    }
+
+    /* Users Table */
+    .users-table { width: 100%; border-collapse: collapse; }
+    .users-table th, .users-table td {
+        padding: 1rem 1.5rem; text-align: left;
+        border-bottom: 1px solid var(--color-border);
+        vertical-align: middle;
+    }
+    .users-table th { font-weight: 600; font-size: 0.9rem; color: var(--color-text-muted); }
+    .users-table tr:last-child td { border-bottom: none; }
+
+    .user-info { display: flex; align-items: center; gap: 1rem; }
+    .user-info .avatar-wrapper { flex-shrink: 0; }
+    .user-info .name { font-weight: 600; color: var(--color-text-dark); }
+    .user-info .email { font-size: 0.9rem; color: var(--color-text-muted); }
+    
+    /* Role Selector */
+    .role-select {
+        width: auto; padding: 8px 12px;
+        border-radius: var(--border-radius-md); font-weight: 600;
+        background-color: var(--color-bg-light); border: 1px solid var(--color-border);
+    }
+    .role-select:disabled { background-color: #ccc; cursor: not-allowed; }
+
+    .role-badge {
+        padding: 8px 12px; border-radius: var(--border-radius-md); font-weight: 600;
+        background-color: var(--color-bg-light); border: 1px solid var(--color-border);
+        color: var(--color-text-dark);
+    }
+</style>
+
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="page-header">
+        <h1><i class="fas fa-users-cog"></i> Manajemen Pengguna</h1>
+        <p>Kelola semua pengguna yang terdaftar di sistem.</p>
+    </div>
+
+    <div class="users-card">
+        <div class="table-wrapper">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Nama Pengguna</th>
+                        <th>Role</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (users && users.length > 0) { %>
+                        <% users.forEach(u => { %>
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <%- include('../partials/avatar', { user: u, size: 'md' }) %>
+                                        <div>
+                                            <div class="name"><%= u.name %></div>
+                                            <div class="email"><%= u.email %></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <% if (u.email === user.email) { %>
+                                        <span class="role-badge"><%= u.role %> (Anda)</span>
+                                    <% } else { %>
+                                        <form action="/admin/users/<%= u._id %>/update-role" method="POST">
+                                            <select name="role" onchange="this.form.submit()" class="role-select">
+                                                <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>User</option>
+                                                <option value="support" <%= u.role === 'support' ? 'selected' : '' %>>Support</option>
+                                                <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                                            </select>
+                                        </form>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <a href="#" class="btn btn-secondary btn-sm disabled" title="Coming soon">Edit</a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="3" style="text-align: center; padding: 40px;">Tidak ada pengguna yang ditemukan.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
-<style>.btn.disabled { pointer-events: none; background: #ccc; }</style>
+<style>.btn.disabled { pointer-events: none; opacity: 0.5; }</style>
 <%- include('../partials/footer') %>

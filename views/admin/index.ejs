@@ -1,45 +1,89 @@
 <%- include('../partials/header', { title: title || 'Admin Dashboard' }) %>
 
-<h1>Admin Dashboard</h1>
-<p>Selamat datang, <%= user.name %>. Di sini Anda dapat mengelola aspek penting dari situs Anda.</p>
+<style>
+    .page-header { margin-bottom: 2.5rem; }
+    .page-header h1 { font-size: 2.8rem; font-weight: 800; }
+    .page-header p { font-size: 1.1rem; color: var(--color-text-muted); }
 
-<div class="grid-2" style="margin-top: 2rem;">
-    <div class="card" style="display: flex; align-items: center; gap: 1.5rem;">
-        <i class="fas fa-users" style="font-size: 2.5rem; color: var(--nexus-primary);"></i>
-        <div>
-            <h3 style="font-size: 2rem; margin: 0;"><%= typeof userCount !== 'undefined' ? userCount : '0' %></h3>
-            <p style="margin: 0; color: var(--nexus-text-gray);">Total Pengguna</p>
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+    .stat-card {
+        display: flex; align-items: center; gap: 1.5rem; padding: 2rem;
+        background-color: white; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-md);
+    }
+    .stat-card-icon {
+        font-size: 2.5rem; width: 60px; height: 60px; display: inline-flex;
+        align-items: center; justify-content: center; border-radius: 50%;
+        background: var(--gradient-primary); color: white;
+    }
+    .stat-card-info h3 {
+        font-size: 2.5rem; font-weight: 700; margin: 0; color: var(--color-text-dark);
+    }
+    .stat-card-info p { margin: 0; color: var(--color-text-muted); }
+
+    .quick-actions-card {
+        background-color: white; border-radius: var(--border-radius-lg);
+        padding: 2rem; box-shadow: var(--shadow-lg); margin-top: 2.5rem;
+    }
+    .quick-actions-card h2 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+    .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+    .action-button {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        text-align: center; padding: 1.5rem; border-radius: var(--border-radius-md);
+        background-color: var(--color-bg-light); border: 1px solid var(--color-border);
+        text-decoration: none; transition: all 0.3s ease;
+    }
+    .action-button:hover {
+        transform: translateY(-5px); box-shadow: var(--shadow-md);
+        border-color: var(--color-primary-start); background-color: white;
+    }
+    .action-button i {
+        font-size: 2rem; margin-bottom: 1rem;
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .action-button span { font-weight: 600; color: var(--color-text-dark); }
+</style>
+
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="page-header">
+        <h1>Admin Dashboard</h1>
+        <p>Selamat datang, <%= user.name %>. Di sini Anda dapat mengelola aspek penting dari situs Anda.</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-card-info">
+                <h3><%= typeof userCount !== 'undefined' ? userCount.toLocaleString('id-ID') : '0' %></h3>
+                <p>Total Pengguna</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-globe-asia"></i></div>
+            <div class="stat-card-info">
+                <h3><%= typeof domainCount !== 'undefined' ? domainCount.toLocaleString('id-ID') : '0' %></h3>
+                <p>Total Domain</p>
+            </div>
         </div>
     </div>
-    <div class="card" style="display: flex; align-items: center; gap: 1.5rem;">
-        <i class="fas fa-globe" style="font-size: 2.5rem; color: var(--nexus-primary);"></i>
-        <div>
-            <h3 style="font-size: 2rem; margin: 0;"><%= typeof domainCount !== 'undefined' ? domainCount : '0' %></h3>
-            <p style="margin: 0; color: var(--nexus-text-gray);">Total Domain</p>
-        </div>
-    </div>
-</div>
 
-<div class="card" style="margin-top: 2rem;">
-    <h2>Tindakan Cepat</h2>
-    <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
-        <a href="/admin/users" class="btn btn-primary">Kelola Pengguna</a>
-        <a href="/admin/domains" class="btn btn-primary">Kelola Domain</a>
-        <a href="/admin/tickets" class="btn btn-secondary">Kelola Tiket</a>
-        <a href="/admin/vouchers" class="btn btn-secondary">Kelola Voucher</a>
-        <a href="/admin/promos" class="btn btn-secondary">Kelola Promo</a>
-        <a href="/admin/notifications" class="btn btn-secondary">Kirim Notifikasi</a>
-        <a href="/admin/products" class="btn btn-secondary">Kelola Produk</a>
-        <a href="/admin/settings-harga" class="btn btn-secondary">Pengaturan Harga</a>
-        <a href="/admin/free-domain-requests" class="btn btn-secondary">Permintaan Domain</a>
-        <a href="/admin/system-status" class="btn btn-secondary">Status Sistem</a>
-        
-        <!-- Tombol Baru untuk Afiliasi -->
-        <form action="/admin/process-affiliates" method="POST" onsubmit="return confirm('Anda yakin ingin memproses payout afiliasi sekarang? Tindakan ini akan memberi saldo kepada semua pengguna yang memenuhi syarat.')">
-            <button type="submit" class="btn btn-primary" style="background: var(--nexus-success);">
-                <i class="fas fa-gift"></i> Proses Payout Afiliasi
-            </button>
-        </form>
+    <div class="quick-actions-card">
+        <h2>Tindakan Cepat</h2>
+        <div class="actions-grid">
+            <a href="/admin/users" class="action-button"><i class="fas fa-users-cog"></i><span>Kelola Pengguna</span></a>
+            <a href="/admin/domains" class="action-button"><i class="fas fa-globe-americas"></i><span>Kelola Domain</span></a>
+            <a href="/admin/tickets" class="action-button"><i class="fas fa-life-ring"></i><span>Kelola Tiket</span></a>
+            <a href="/admin/products" class="action-button"><i class="fas fa-box-open"></i><span>Kelola Produk</span></a>
+            <a href="/admin/settings-harga" class="action-button"><i class="fas fa-dollar-sign"></i><span>Pengaturan Harga</span></a>
+            <a href="/admin/vouchers" class="action-button"><i class="fas fa-percent"></i><span>Kelola Voucher</span></a>
+            <a href="/admin/promos" class="action-button"><i class="fas fa-tags"></i><span>Kelola Promo</span></a>
+            <a href="/admin/notifications" class="action-button"><i class="fas fa-paper-plane"></i><span>Kirim Notifikasi</span></a>
+            <a href="/admin/system-status" class="action-button"><i class="fas fa-server"></i><span>Status Sistem</span></a>
+            <a href="/admin/free-domain-requests" class="action-button"><i class="fas fa-gift"></i><span>Permintaan Domain</span></a>
+        </div>
     </div>
 </div>
 

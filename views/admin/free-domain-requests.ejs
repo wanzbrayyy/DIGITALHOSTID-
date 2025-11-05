@@ -1,27 +1,79 @@
 <%- include('../partials/header', { title: title }) %>
-<h1>Permintaan Domain Gratis</h1>
-<div class="card table-wrapper">
-    <table>
-        <thead><tr><th>Domain</th><th>Email</th><th>Status</th><th>Aksi</th></tr></thead>
-        <tbody>
-            <% requests.forEach(req => { %>
-            <tr>
-                <td><%= req.domainName %></td>
-                <td><%= req.email %></td>
-                <td><%= req.status %></td>
-                <td>
-                    <form action="/admin/free-domain-requests/update" method="POST">
-                        <input type="hidden" name="requestId" value="<%= req._id %>">
-                        <select name="status" onchange="this.form.submit()">
-                            <option value="pending" <%= req.status === 'pending' ? 'selected' : '' %>>Pending</option>
-                            <option value="approved" <%= req.status === 'approved' ? 'selected' : '' %>>Setujui</option>
-                            <option value="rejected" <%= req.status === 'rejected' ? 'selected' : '' %>>Tolak</option>
-                        </select>
-                    </form>
-                </td>
-            </tr>
-            <% }) %>
-        </tbody>
-    </table>
+
+<style>
+    :root {
+        --status-approved-bg: #e7f7f2; --status-approved-fg: #0d8a59;
+        --status-rejected-bg: #feedee; --status-rejected-fg: #ef4444;
+        --status-pending-bg: #fff8e8; --status-pending-fg: #f59e0b;
+    }
+    .page-header { margin-bottom: 2.5rem; }
+    .page-header h1 {
+        font-size: 2.8rem; font-weight: 800; display: flex; align-items: center; gap: 15px;
+    }
+    .page-header h1 i {
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .requests-card {
+        background-color: white; border-radius: var(--border-radius-lg);
+        padding: 2rem; box-shadow: var(--shadow-lg);
+    }
+    
+    .requests-table { width: 100%; border-collapse: collapse; }
+    .requests-table th, .requests-table td {
+        padding: 1rem 1.5rem; text-align: left;
+        border-bottom: 1px solid var(--color-border); vertical-align: middle;
+    }
+    .requests-table th { font-weight: 600; font-size: 0.9rem; color: var(--color-text-muted); }
+    .requests-table tr:last-child td { border-bottom: none; }
+    
+    .status-badge {
+        padding: 6px 12px; border-radius: 50px;
+        font-size: 0.8rem; font-weight: 600; text-transform: capitalize;
+    }
+    .status-approved { background-color: var(--status-approved-bg); color: var(--status-approved-fg); }
+    .status-rejected { background-color: var(--status-rejected-bg); color: var(--status-rejected-fg); }
+    .status-pending { background-color: var(--status-pending-bg); color: var(--status-pending-fg); }
+</style>
+
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="page-header">
+        <h1><i class="fas fa-gift"></i> Permintaan Domain Gratis</h1>
+    </div>
+
+    <div class="requests-card">
+        <div class="table-wrapper">
+            <table class="requests-table">
+                <thead>
+                    <tr>
+                        <th>Domain</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% requests.forEach(req => { %>
+                    <tr>
+                        <td><strong><%= req.domainName %></strong></td>
+                        <td><%= req.email %></td>
+                        <td><span class="status-badge status-<%= req.status %>"><%= req.status %></span></td>
+                        <td>
+                            <form action="/admin/free-domain-requests/update" method="POST">
+                                <input type="hidden" name="requestId" value="<%= req._id %>">
+                                <select name="status" onchange="this.form.submit()" class="form-control" style="width: auto;">
+                                    <option value="pending" <%= req.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                                    <option value="approved" <%= req.status === 'approved' ? 'selected' : '' %>>Setujui</option>
+                                    <option value="rejected" <%= req.status === 'rejected' ? 'selected' : '' %>>Tolak</option>
+                                </select>
+                            </form>
+                        </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
 <%- include('../partials/footer') %>

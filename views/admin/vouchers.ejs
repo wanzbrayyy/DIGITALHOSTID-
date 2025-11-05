@@ -1,66 +1,111 @@
 <%- include('../partials/header', { title: 'Manajemen Voucher' }) %>
 
-<h1><i class="fas fa-percent"></i> Manajemen Voucher</h1>
-<p>Buat dan kelola kode diskon untuk pengguna.</p>
+<style>
+    .page-header { margin-bottom: 2.5rem; }
+    .page-header h1 {
+        font-size: 2.8rem; font-weight: 800; display: flex; align-items: center; gap: 15px;
+    }
+    .page-header h1 i {
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .page-header p { font-size: 1.1rem; color: var(--color-text-muted); max-width: 600px; }
+    
+    .card {
+        background-color: white; border-radius: var(--border-radius-lg);
+        padding: 2.5rem; box-shadow: var(--shadow-lg); margin-bottom: 2rem;
+    }
+    .card h2 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+    
+    /* Form & Table Styling */
+    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+    .form-control {
+        width: 100%; padding: 14px 18px; border-radius: var(--border-radius-md);
+        background-color: var(--color-bg-light); border: 1px solid var(--color-border);
+        font-size: 1rem; transition: all 0.3s ease;
+    }
+    .form-control:focus {
+        background-color: white; border-color: var(--color-primary-start);
+        box-shadow: 0 0 0 3px rgba(74, 0, 224, 0.15); outline: none;
+    }
+    
+    .voucher-table { width: 100%; border-collapse: collapse; }
+    .voucher-table th, .voucher-table td {
+        padding: 1rem 1.5rem; text-align: left;
+        border-bottom: 1px solid var(--color-border);
+    }
+    .voucher-table th { font-weight: 600; font-size: 0.9rem; color: var(--color-text-muted); }
+    .voucher-table tr:last-child td { border-bottom: none; }
+    .status-active { color: var(--color-success); font-weight: bold; }
+    .status-inactive { color: var(--color-danger); }
+</style>
 
-<div class="card">
-    <h2>Buat Voucher Baru</h2>
-    <form action="/admin/vouchers/create" method="POST">
-        <div class="form-group">
-            <label for="code">Kode Voucher (tanpa spasi, huruf kapital)</label>
-            <input type="text" id="code" name="code" class="form-control" required style="text-transform: uppercase;">
-        </div>
-        <div class="form-group">
-            <label for="discount">Diskon (dalam %)</label>
-            <input type="number" id="discount" name="discount" class="form-control" required min="1" max="100">
-        </div>
-         <div class="form-group">
-            <label for="expiryDate">Tanggal Kedaluwarsa</label>
-            <input type="date" id="expiryDate" name="expiryDate" class="form-control" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Buat Voucher</button>
-    </form>
-</div>
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="page-header">
+        <h1><i class="fas fa-percent"></i> Manajemen Voucher</h1>
+        <p>Buat dan kelola kode diskon untuk pengguna.</p>
+    </div>
 
-<div class="card">
-    <h2>Voucher Aktif</h2>
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Kode</th>
-                    <th>Diskon</th>
-                    <th>Kedaluwarsa</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if(vouchers && vouchers.length > 0) { %>
-                    <% vouchers.forEach(voucher => { %>
-                        <tr>
-                            <td><strong><%= voucher.code %></strong></td>
-                            <td><%= voucher.discount %>%</td>
-                            <td><%= new Date(voucher.expiryDate).toLocaleDateString('id-ID') %></td>
-                            <td>
-                                <% if(new Date(voucher.expiryDate) < new Date() || !voucher.isActive) { %>
-                                    <span style="color: var(--nexus-danger);">Tidak Aktif</span>
-                                <% } else { %>
-                                    <span style="color: var(--nexus-success);">Aktif</span>
-                                <% } %>
-                            </td>
-                            <td>
-                                <form action="/admin/vouchers/<%= voucher._id %>/delete" method="POST" onsubmit="return confirm('Yakin ingin menghapus voucher ini?')">
-                                    <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                    <% }) %>
-                <% } else { %>
-                    <tr><td colspan="5" style="text-align: center; padding: 20px;">Belum ada voucher yang dibuat.</td></tr>
-                <% } %>
-            </tbody>
-        </table>
+    <div class="card">
+        <h2>Buat Voucher Baru</h2>
+        <form action="/admin/vouchers/create" method="POST">
+            <div class="grid-2" style="gap: 1.5rem;">
+                <div class="form-group">
+                    <label for="code">Kode Voucher</label>
+                    <input type="text" id="code" name="code" class="form-control" required style="text-transform: uppercase;" placeholder="TANPASPASI">
+                </div>
+                <div class="form-group">
+                    <label for="discount">Diskon (dalam %)</label>
+                    <input type="number" id="discount" name="discount" class="form-control" required min="1" max="100">
+                </div>
+            </div>
+             <div class="form-group">
+                <label for="expiryDate">Tanggal Kedaluwarsa</label>
+                <input type="date" id="expiryDate" name="expiryDate" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Buat Voucher</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Voucher Tersedia</h2>
+        <div class="table-wrapper">
+            <table class="voucher-table">
+                <thead>
+                    <tr>
+                        <th>Kode</th>
+                        <th>Diskon</th>
+                        <th>Kedaluwarsa</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if(vouchers && vouchers.length > 0) { %>
+                        <% vouchers.forEach(voucher => { %>
+                            <tr>
+                                <td><strong><%= voucher.code %></strong></td>
+                                <td><%= voucher.discount %>%</td>
+                                <td><%= new Date(voucher.expiryDate).toLocaleDateString('id-ID') %></td>
+                                <td>
+                                    <% if(new Date(voucher.expiryDate) < new Date() || !voucher.isActive) { %>
+                                        <span class="status-inactive">Tidak Aktif</span>
+                                    <% } else { %>
+                                        <span class="status-active">Aktif</span>
+                                    <% } %>
+                                </td>
+                                <td style="text-align: right;">
+                                    <form action="/admin/vouchers/<%= voucher._id %>/delete" method="POST" onsubmit="return confirm('Yakin ingin menghapus voucher ini?')">
+                                        <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="5" style="text-align: center; padding: 40px;">Belum ada voucher yang dibuat.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

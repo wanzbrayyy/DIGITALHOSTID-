@@ -1,64 +1,115 @@
-
 <%- include('../partials/header', { title: 'Kelola Promo' }) %>
 
-<h1><i class="fas fa-tags"></i> Kelola Promo Halaman Depan</h1>
-<p>Hanya satu promo yang bisa aktif dalam satu waktu. Membuat promo baru akan menonaktifkan yang lama secara otomatis.</p>
+<style>
+    /*
+    ============================================
+    --- ADMIN PROMOS PAGE STYLING ---
+    ============================================
+    */
+    .page-header {
+        margin-bottom: 2.5rem;
+    }
+    .page-header h1 {
+        font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem;
+        display: flex; align-items: center; gap: 15px;
+    }
+    .page-header h1 i {
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .page-header p { font-size: 1.1rem; color: var(--color-text-muted); max-width: 600px; }
+    
+    .card {
+        background-color: white; border-radius: var(--border-radius-lg);
+        padding: 2.5rem; box-shadow: var(--shadow-lg); margin-bottom: 2rem;
+    }
+    .card h3 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+    
+    /* Form & Table Styling */
+    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+    .form-control {
+        width: 100%; padding: 14px 18px; border-radius: var(--border-radius-md);
+        background-color: var(--color-bg-light); border: 1px solid var(--color-border);
+        font-size: 1rem; transition: all 0.3s ease;
+    }
+    .form-control:focus {
+        background-color: white; border-color: var(--color-primary-start);
+        box-shadow: 0 0 0 3px rgba(74, 0, 224, 0.15); outline: none;
+    }
 
-<div class="card">
-    <h3>Buat Promo Baru</h3>
-    <form action="/admin/promos/create" method="POST" style="margin-top: 1rem;">
-        <div class="form-group">
-            <label for="title">Judul Promo</label>
-            <input type="text" id="title" name="title" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="message">Pesan/Deskripsi Promo</label>
-            <textarea id="message" name="message" class="form-control" rows="3" required></textarea>
-        </div>
-        <div class="form-group">
-            <label for="link">Link Tombol (opsional)</label>
-            <input type="text" id="link" name="link" class="form-control" placeholder="Contoh: /#pricing">
-        </div>
-        <button type="submit" class="btn btn-primary">Simpan dan Aktifkan Promo</button>
-    </form>
-</div>
-<div class="card">
-    <h3>Promo Tersimpan</h3>
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Judul</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (promos && promos.length > 0) { %>
-                    <% promos.forEach(promo => { %>
+    .promo-table { width: 100%; border-collapse: collapse; }
+    .promo-table th, .promo-table td {
+        padding: 1rem 1.5rem; text-align: left;
+        border-bottom: 1px solid var(--color-border);
+    }
+    .promo-table th { font-weight: 600; font-size: 0.9rem; color: var(--color-text-muted); }
+    .promo-table tr:last-child td { border-bottom: none; }
+    .status-active { color: var(--color-success); font-weight: bold; }
+    .status-inactive { color: var(--color-text-muted); }
+</style>
+
+<div class="container" style="padding-top: 3rem; padding-bottom: 3rem;">
+    <div class="page-header">
+        <h1><i class="fas fa-tags"></i> Kelola Promo Halaman Depan</h1>
+        <p>Hanya satu promo yang bisa aktif dalam satu waktu. Membuat promo baru akan menonaktifkan yang lama secara otomatis.</p>
+    </div>
+
+    <div class="card">
+        <h3>Buat Promo Baru</h3>
+        <form action="/admin/promos/create" method="POST">
+            <div class="form-group">
+                <label for="title">Judul Promo</label>
+                <input type="text" id="title" name="title" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="message">Pesan/Deskripsi Promo</label>
+                <textarea id="message" name="message" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="link">Link Tombol (opsional)</label>
+                <input type="text" id="link" name="link" class="form-control" placeholder="Contoh: /#pricing">
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Simpan dan Aktifkan Promo</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>Promo Tersimpan</h3>
+        <div class="table-wrapper">
+            <table class="promo-table">
+                <thead>
                     <tr>
-                        <td><%= promo.title %></td>
-                        <td>
-                            <% if(promo.isActive) { %>
-                                <span style="color: var(--nexus-success); font-weight: bold;">Aktif</span>
-                            <% } else { %>
-                                <span style="color: var(--nexus-text-gray);">Nonaktif</span>
-                            <% } %>
-                        </td>
-                        <td>
-                            <form action="/admin/promos/<%= promo.id %>/delete" method="POST" onsubmit="return confirm('Yakin ingin menghapus promo ini?');">
-                                <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
-                            </form>
-                        </td>
+                        <th>Judul</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Aksi</th>
                     </tr>
-                    <% }) %>
-                <% } else { %>
-                    <tr>
-                        <td colspan="3" style="padding: 20px; text-align: center;">Tidak ada promo yang tersimpan.</td>
-                    </tr>
-                <% } %>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <% if (promos && promos.length > 0) { %>
+                        <% promos.forEach(promo => { %>
+                        <tr>
+                            <td><strong><%= promo.title %></strong></td>
+                            <td>
+                                <% if(promo.isActive) { %>
+                                    <span class="status-active">Aktif</span>
+                                <% } else { %>
+                                    <span class="status-inactive">Nonaktif</span>
+                                <% } %>
+                            </td>
+                            <td style="text-align: right;">
+                                <form action="/admin/promos/<%= promo.id %>/delete" method="POST" onsubmit="return confirm('Yakin ingin menghapus promo ini?');">
+                                    <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="3" style="padding: 2rem; text-align: center;">Tidak ada promo yang tersimpan.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
