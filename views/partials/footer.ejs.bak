@@ -84,54 +84,6 @@
             color: var(--color-danger); font-weight: 600; text-decoration: none;
             border-top: 1px solid var(--color-border);
         }
-            .whatsapp-fab {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 1000;
-            width: 60px;
-            height: 60px;
-            background-color: #25D366;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-        .whatsapp-fab:hover {
-            transform: scale(1.1) rotate(10deg);
-            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
-        }
-        .fab-tooltip {
-            position: absolute;
-            right: 110%;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: var(--color-text-dark);
-            color: white;
-            padding: 8px 12px;
-            border-radius: var(--border-radius-md);
-            white-space: nowrap;
-            font-size: 0.9rem;
-            font-weight: 500;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
-        }
-        .whatsapp-fab:hover .fab-tooltip {
-            opacity: 1;
-            visibility: visible;
-        }
-        /* Adjust position if bottom nav is visible */
-        <% if (user) { %>
-        .whatsapp-fab {
-            bottom: 90px; /* 65px (nav height) + 25px margin */
-        }
-        <% } %>
     </style>
 
     <nav class="bottom-nav">
@@ -181,11 +133,7 @@
         </div>
         <p style="color: #888;">&copy; 2025 DigitalHostID. All Rights Reserved.</p>
     </footer>
-    <a href="https://wa.me/15489195889" class="whatsapp-fab" target="_blank" rel="noopener noreferrer" aria-label="Hubungi kami di WhatsApp">
-        <i class="fab fa-whatsapp"></i>
-        <span class="fab-tooltip">Hubungi Awan</span>
-    </a>
-    
+
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- ALL EXISTING SCRIPT LOGIC (Notifications, Avatar Generation, etc.) ---
