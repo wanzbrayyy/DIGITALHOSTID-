@@ -20,7 +20,6 @@ exports.getRegisterPage = (req, res) => {
         canonicalUrl: process.env.APP_BASE_URL + '/register'
     });
 };
-
 exports.postLogin = async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -40,7 +39,8 @@ exports.postLogin = async (req, res) => {
             email: user.email,
             role: user.role,
             profilePicture: user.profilePicture,
-            affiliateCode: user.affiliateCode
+            affiliateCode: user.affiliateCode,
+            creditBalance: user.creditBalance // Langsung ambil dari user
         };
 
         req.session.save((err) => {
@@ -48,20 +48,15 @@ exports.postLogin = async (req, res) => {
                 return res.render('login', { error: 'Gagal menyimpan sesi, coba lagi.', title: 'Login' });
             }
             
-            if (user.role === 'admin') {
-                return res.redirect('/admin');
-            } else if (user.role === 'support') {
-                return res.redirect('/support');
-            } else {
-                return res.redirect('/dashboard');
-            }
+            if (user.role === 'admin') return res.redirect('/admin');
+            if (user.role === 'support') return res.redirect('/support');
+            res.redirect('/dashboard');
         });
 
     } catch (error) {
         res.render('login', { error: 'Terjadi kesalahan pada server.', title: 'Login' });
     }
 };
-
 exports.postRegister = async (req, res) => {
     const { name, email, password, password_confirmation, organization, street_1, city, state, postal_code, voice } = req.body;
 

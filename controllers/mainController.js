@@ -5,49 +5,47 @@ const Setting = require('../models/setting');
 const SystemService = require('../models/systemService');
 const FreeDomainRequest = require('../models/freeDomainRequest');
 const axios = require('axios');
-
+const User = require('../models/user'); 
 exports.getHomePage = async (req, res) => {
     try {
         const products = await Product.find({ isFeatured: true });
         const promo = await Promo.findOne({ isActive: true });
         
         const priceData = await domainService.listAllDomainPrices({ promo: true, limit: 6 });
-        
         const settings = await Setting.findOne() || new Setting();
         const tldPriceOverrides = settings.prices.tld;
 
         const domainPrices = priceData.data
-            // **PERBAIKAN YANG SAMA DITERAPKAN DI SINI**
-            .filter(item => item && item.domain_extension && item.registration)
+            .filter(item => item && item.registration && item.registration['1'] && item.domain_extension)
             .map(item => {
                 const extensionWithDot = item.domain_extension.extension;
                 const safeTldKey = extensionWithDot.substring(1).replace(/\./g, '_');
-            
                 const overridePrice = tldPriceOverrides.get(safeTldKey);
                 const apiPromoPrice = item.promo_registration.registration['1'];
                 const apiNormalPrice = item.registration['1'];
-            
                 let displayPrice = apiNormalPrice;
-                if (apiPromoPrice) {
-                    displayPrice = apiPromoPrice;
-                }
-                if (overridePrice) {
-                    displayPrice = overridePrice;
-                }
-
+                if (apiPromoPrice) displayPrice = apiPromoPrice;
+                if (overridePrice) displayPrice = overridePrice;
                 return {
-                    extension: item.domain_extension.extension,
+                    extension: extensionWithDot,
                     price: parseInt(displayPrice),
                     originalPrice: parseInt(apiNormalPrice),
                     hasPromo: !!apiPromoPrice || (overridePrice && overridePrice < apiNormalPrice)
                 };
             });
+            
+        const userCount = await User.countDocuments();
+        const domainsResponse = await domainService.listDomains({ limit: 1 });
+        const domainCount = domainsResponse.meta.total;
 
         res.render('index', { 
             user: req.session.user, 
             products,
             promo,
             domainPrices,
+            userCount,
+            domainCount,
+            orderCount: 11106, // Ganti dengan data nyata jika ada
             title: 'Domain, Hosting, & SSL Murah',
             description: 'DigitalHostID adalah penyedia layanan registrasi domain, hosting cepat, dan sertifikat SSL terpercaya di Indonesia.',
             keywords: 'domain, hosting, ssl, web hosting, domain murah, hosting indonesia',
@@ -56,13 +54,13 @@ exports.getHomePage = async (req, res) => {
     } catch (error) {
         console.error("ERROR di getHomePage:", error);
         res.render('index', { 
-            user: req.session.user, 
-            products: [], 
-            promo: null, 
-            domainPrices: []
+            user: req.session.user, products: [], promo: null, domainPrices: [],
+            userCount: 0, domainCount: 0, orderCount: 0,
+            title: 'Error'
         });
     }
 };
+
 
 exports.getDomainPricingPage = async (req, res) => {
     try {

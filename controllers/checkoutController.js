@@ -14,10 +14,8 @@ const snap = new midtransClient.Snap({
 const calculatePrices = (cart, settings) => {
     cart.options = cart.options || { period: 1 };
     cart.pricing = {};
-
     const whoisBasePrice = settings.prices.whois;
     let subtotal = 0;
-
     if (cart.type === 'domain') {
         const period = cart.options.period || 1;
         const basePrice = cart.item.price;
@@ -26,7 +24,6 @@ const calculatePrices = (cart, settings) => {
     } else {
         subtotal = cart.item.price;
     }
-
     cart.pricing.subtotal = subtotal;
     let discountAmount = 0;
     if (cart.discount && cart.discount.percentage) {
@@ -40,16 +37,34 @@ const calculatePrices = (cart, settings) => {
 const fulfillOrder = async (cart, user) => {
     if (cart.type === 'domain') {
         const userDetails = await User.findById(user.id);
+
+        // **PERBAIKAN UTAMA: Kirim HANYA data yang dibutuhkan oleh API**
         const domainData = {
             name: cart.item.domain,
             period: cart.options.period,
             customer_id: userDetails.customerId,
-            buy_whois_protection: cart.options.buy_whois_protection || false
+            buy_whois_protection: cart.options.buy_whois_protection || false,
+            'nameserver[0]': 'ns1.digitalhostid.co.id',
+            'nameserver[1]': 'ns2.digitalhostid.co.id',
+            'contact[registrant][name]': userDetails.name,
+            'contact[registrant][email]': userDetails.email,
+            'contact[registrant][organization]': userDetails.organization,
+            'contact[registrant][street_1]': userDetails.street_1,
+            'contact[registrant][city]': userDetails.city,
+            'contact[registrant][state]': userDetails.state,
+            'contact[registrant][postal_code]': userDetails.postal_code,
+            'contact[registrant][country_code]': userDetails.country_code || 'ID',
+            'contact[registrant][voice]': userDetails.voice,
         };
-        await domainService.registerDomain(domainData);
+
+        const registrationResponse = await domainService.registerDomain(domainData);
+
+        if (registrationResponse && registrationResponse.data && registrationResponse.data.id) {
+            const domainId = registrationResponse.data.id;
+            await domainService.createDnsZone(domainId);
+        }
     }
 };
-
 exports.addToCart = (req, res) => {
     const { type, plan, price } = req.body;
     req.session.cart = {
@@ -70,7 +85,6 @@ exports.getCheckoutPage = async (req, res) => {
         const user = await User.findById(req.session.user.id);
         const settings = await Setting.findOne() || new Setting();
         req.session.cart = calculatePrices(req.session.cart, settings);
-        
         res.render('checkout', {
             user: user,
             cart: req.session.cart,
@@ -87,12 +101,54 @@ exports.updateCartOptions = (req, res) => {
     if (!req.session.cart || req.session.cart.type !== 'domain') {
         return res.redirect('/checkout');
     }
-    const { period, buy_whois_protection } = req.body;
-    req.session.cart.options = {
-        period: parseInt(period) || 1,
-        buy_whois_protection: buy_whois_protection === 'on'
-    };
+    req.session.cart.options.period = parseInt(req.body.period) || 1;
+    req.session.cart.options.buy_whois_protection = req.body.buy_whois_protection === 'on';
     res.redirect('/checkout');
+};
+
+exports.updateCartDomain = async (req, res) => {
+    const { newDomain } = req.body;
+    if (!req.session.cart || req.session.cart.type !== 'domain') {
+        return res.status(400).json({ success: false, message: 'Keranjang tidak valid.' });
+    }
+    if (!newDomain || !newDomain.includes('.')) {
+        return res.status(400).json({ success: false, message: 'Format domain tidak valid.' });
+    }
+
+    try {
+        const settings = await Setting.findOne() || new Setting();
+        const tldWithDot = `.${newDomain.split('.').slice(1).join('.')}`;
+        const tldWithoutDot = tldWithDot.substring(1);
+        const safeTldKey = tldWithoutDot.replace(/\./g, '_');
+        const overridePrice = settings.prices.tld.get(safeTldKey);
+
+        let finalPrice;
+
+        if (overridePrice) {
+            finalPrice = overridePrice;
+        } else {
+            const priceData = await domainService.listAllDomainPrices({ 'domainExtension[extension]': tldWithDot });
+            const apiPriceInfo = priceData.data[0];
+
+            if (!apiPriceInfo) {
+                finalPrice = 150000;
+            } else {
+                const apiPromoPrice = apiPriceInfo.promo_registration?.registration?.['1'];
+                const apiNormalPrice = apiPriceInfo.registration['1'];
+                finalPrice = apiPromoPrice || apiNormalPrice;
+            }
+        }
+
+        req.session.cart.item.domain = newDomain;
+        req.session.cart.item.price = parseFloat(finalPrice);
+
+        req.session.save(err => {
+            if (err) return res.status(500).json({ success: false, message: 'Gagal menyimpan sesi.' });
+            res.json({ success: true, message: 'Domain di keranjang berhasil diperbarui.' });
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: `Terjadi kesalahan server: ${error.message}` });
+    }
 };
 
 exports.applyVoucher = async (req, res) => {
@@ -104,10 +160,7 @@ exports.applyVoucher = async (req, res) => {
             req.flash('error_msg', 'Voucher tidak valid atau sudah kedaluwarsa.');
             return res.redirect('/checkout');
         }
-        req.session.cart.discount = {
-            code: voucher.code,
-            percentage: voucher.discount
-        };
+        req.session.cart.discount = { code: voucher.code, percentage: voucher.discount };
         req.flash('success_msg', `Voucher ${voucher.code} berhasil diterapkan.`);
         res.redirect('/checkout');
     } catch (error) {
@@ -119,7 +172,6 @@ exports.applyVoucher = async (req, res) => {
 exports.removeVoucher = (req, res) => {
     if (req.session.cart && req.session.cart.discount) {
         delete req.session.cart.discount;
-        req.flash('success_msg', 'Voucher berhasil dihapus.');
     }
     res.redirect('/checkout');
 };
@@ -139,7 +191,7 @@ exports.processCheckout = async (req, res) => {
 
         if (payment_method === 'credit') {
             if (user.creditBalance < finalPrice) {
-                req.flash('error_msg', 'Saldo Anda tidak mencukupi untuk transaksi ini.');
+                req.flash('error_msg', 'Saldo Anda tidak mencukupi.');
                 return res.redirect('/checkout');
             }
 
@@ -148,12 +200,12 @@ exports.processCheckout = async (req, res) => {
             req.session.user.creditBalance = user.creditBalance;
 
             await fulfillOrder(cart, req.session.user);
-
             delete req.session.cart;
-            req.flash('success_msg', 'Pembayaran dengan saldo berhasil! Layanan Anda sedang diaktifkan.');
-            return res.redirect('/dashboard');
+            
+            // **PERBAIKAN: Redirect dengan query parameter, jangan pakai flash di sini**
+            return res.redirect('/dashboard?registration=processing');
 
-        } else {
+        } else if (payment_method === 'midtrans') {
             const orderId = `TRX-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
             const parameter = {
                 transaction_details: { order_id: orderId, gross_amount: finalPrice },
@@ -162,39 +214,13 @@ exports.processCheckout = async (req, res) => {
             req.session.pending_order = { order_id: orderId, cart: cart, user_id: user._id };
             const token = await snap.createTransactionToken(parameter);
             return res.json({ token });
+        } else {
+            req.flash('error_msg', 'Metode pembayaran tidak valid.');
+            return res.redirect('/checkout');
         }
     } catch (error) {
         console.error("ERROR di processCheckout:", error);
         req.flash('error_msg', `Gagal memproses pembayaran: ${error.message}`);
         res.redirect('/checkout');
-    }
-};
-exports.updateCartDomain = async (req, res) => {
-    const { newDomain } = req.body;
-    if (!req.session.cart || req.session.cart.type !== 'domain') {
-        return res.status(400).json({ success: false, message: 'Keranjang tidak valid.' });
-    }
-    if (!newDomain || newDomain.length < 4 || !newDomain.includes('.')) {
-        return res.status(400).json({ success: false, message: 'Format domain tidak valid.' });
-    }
-
-    try {
-        const settings = await Setting.findOne() || new Setting();
-        const tld = newDomain.split('.').pop();
-        const safeTldKey = tld.replace(/\./g, '_');
-        
-        const price = settings.prices.tld.get(safeTldKey) || 150000;
-
-        req.session.cart.item.domain = newDomain;
-        req.session.cart.item.price = price;
-
-        req.session.save(err => {
-            if (err) {
-                return res.status(500).json({ success: false, message: 'Gagal menyimpan sesi.' });
-            }
-            res.json({ success: true, message: 'Domain di keranjang berhasil diperbarui.' });
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Terjadi kesalahan server.' });
     }
 };

@@ -266,50 +266,46 @@ exports.updateSettingsHarga = async (req, res) => {
         const { setting_type } = req.body;
         let settings = await Setting.findOne() || new Setting();
 
-        // **PERBAIKAN "BRUTAL" DIMULAI DI SINI**
-
-        // 1. Buat salinan dari objek prices yang ada
-        const newPrices = {
-            whois: settings.prices.whois,
-            tld: new Map(settings.prices.tld),
-            ssl: new Map(settings.prices.ssl)
-        };
-
         switch (setting_type) {
             case 'whois':
-                newPrices.whois = req.body.whois_price;
+                settings.prices.whois = req.body.whois_price;
                 break;
             
             case 'tld_bulk':
                 if (req.body.tld_prices) {
+                    // **PERBAIKAN "NUKLIR" DIMULAI DI SINI**
+
+                    // 1. Buat Map baru dari data yang sudah ada di database
+                    const newTldMap = new Map(settings.prices.tld);
+
+                    // 2. Loop melalui data dari form
                     const tldPricesFromForm = req.body.tld_prices;
                     for (const tld in tldPricesFromForm) {
                         const safeKey = tld.replace(/\./g, '_');
                         const price = tldPricesFromForm[tld];
 
                         if (price && price > 0) {
-                            newPrices.tld.set(safeKey, parseInt(price));
+                            // 3. Update atau tambahkan nilai di Map BARU
+                            newTldMap.set(safeKey, parseInt(price));
                         } else {
-                            newPrices.tld.delete(safeKey);
+                            // 4. Hapus nilai dari Map BARU jika input kosong
+                            newTldMap.delete(safeKey);
                         }
                     }
+
+                    // 5. GANTI SELURUH properti dengan Map BARU yang sudah lengkap
+                    settings.prices.tld = newTldMap;
                 }
                 break;
             
             case 'ssl':
                 if (req.body.ssl_prices) {
                     const filteredPrices = Object.entries(req.body.ssl_prices).filter(([_, value]) => value !== '');
-                    newPrices.ssl = new Map(filteredPrices);
+                    settings.prices.ssl = new Map(filteredPrices);
                 }
                 break;
         }
         
-        // 2. GANTI SELURUH OBJEK 'prices' dengan yang baru
-        settings.prices = newPrices;
-        
-        // 3. (Opsional tapi aman) Tandai path utama sebagai termodifikasi
-        settings.markModified('prices');
-
         await settings.save();
         req.flash('success_msg', 'Pengaturan harga berhasil diperbarui.');
 
@@ -318,7 +314,6 @@ exports.updateSettingsHarga = async (req, res) => {
     }
     res.redirect('/admin/settings-harga');
 };
-
 exports.getFreeDomainRequests = async (req, res) => {
     try {
         const requests = await FreeDomainRequest.find().sort({ createdAt: -1 });
