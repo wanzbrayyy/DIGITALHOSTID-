@@ -3,197 +3,354 @@
 <script type="text/javascript" src="https://app.midtrans.com/snap/snap.js" data-client-key="<%= clientKey %>"></script>
 
 <style>
-    .domain-edit-form { display: flex; align-items: center; gap: 10px; }
-    #domain-status-message { margin-top: 10px; font-weight: bold; }
-    .status-available { color: var(--nexus-success); }
-    .status-taken { color: var(--nexus-danger); }
+    /*
+    ============================================
+    --- REVAMPED CHECKOUT PAGE STYLING ---
+    ============================================
+    */
+    .checkout-container {
+        display: grid;
+        grid-template-columns: 3fr 2fr;
+        gap: 2rem;
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+        align-items: flex-start;
+    }
     
-    .stepper { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 50px; }
-    .stepper button { background: #f9f9f9; border: none; padding: 10px 20px; cursor: pointer; font-size: 1.2rem; }
-    .stepper input { width: 60px; text-align: center; border: none; font-size: 1.1rem; font-weight: 600; background: transparent; }
-    .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-    .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: var(--nexus-primary); }
-    input:checked + .slider:before { transform: translateX(26px); }
-    .price-summary { border-left: 3px solid var(--nexus-primary); padding-left: 15px; margin-top: 1.5rem; }
-    .detail-item { display: flex; justify-content: space-between; padding: 8px 0; }
-    .voucher-form { display: flex; gap: 10px; margin-top: 1.5rem; }
-    .discount-row { color: var(--nexus-success); font-weight: bold; }
-    .payment-options { margin-top: 2rem; border: 1px solid #eee; border-radius: var(--nexus-radius); overflow: hidden; }
-    .payment-option { display: flex; align-items: center; padding: 1rem; cursor: pointer; border-bottom: 1px solid #eee; }
-    .payment-option:last-child { border-bottom: none; }
-    .payment-option:hover { background-color: #f9fafb; }
-    .payment-option input[type="radio"] { display: none; }
-    .payment-option .icon { font-size: 1.5rem; margin-right: 1rem; color: var(--nexus-text-gray); width: 30px; text-align: center; }
-    .payment-option .details { flex-grow: 1; }
-    .payment-option .details strong { display: block; }
-    .payment-option .details .balance { color: var(--nexus-success); font-weight: bold; }
-    .payment-option .radio-custom { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ccc; }
-    .payment-option input[type="radio"]:checked ~ .radio-custom { border-color: var(--nexus-primary); background-color: var(--nexus-primary); }
-    .payment-option.disabled { color: #aaa; background-color: #f5f5f5; cursor: not-allowed; }
+    .checkout-main, .checkout-sidebar {
+        width: 100%;
+    }
+
+    /* --- General Card Styling --- */
+    .checkout-card {
+        background-color: white;
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+        margin-bottom: 2rem;
+    }
+    .checkout-card h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* --- Item Details & Options --- */
+    .item-description {
+        font-size: 1.1rem;
+        color: var(--color-text-muted);
+        margin-bottom: 1.5rem;
+    }
+    .item-description strong { color: var(--color-text-dark); }
+    .domain-edit-form { display: flex; align-items: center; gap: 10px; }
+    #domain-input { font-size: 1rem; padding: 14px; }
+    #check-domain-btn { padding: 14px 20px; font-size: 0.9rem; }
+    #domain-status-message { margin-top: 10px; font-weight: 600; font-size: 0.9rem; }
+    .status-available { color: var(--color-success); }
+    .status-taken { color: var(--color-danger); }
+
+    .option-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem 0;
+        border-bottom: 1px solid var(--color-border);
+    }
+    .option-item:last-child { border-bottom: none; }
+    .option-item h4 { margin: 0; font-size: 1.1rem; }
+
+    /* Redesigned Stepper */
+    .stepper-control { display: flex; align-items: center; gap: 10px; }
+    .stepper-control button {
+        width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border);
+        background-color: var(--color-bg-light); font-size: 1.2rem; cursor: pointer; transition: all 0.2s;
+    }
+    .stepper-control button:hover { background-color: white; border-color: var(--color-primary-start); color: var(--color-primary-start); }
+    .stepper-control input {
+        width: 50px; text-align: center; border: none; font-size: 1.2rem; font-weight: 700; background: transparent;
+    }
+
+    /* Redesigned Toggle Switch */
+    .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-switch .slider {
+        position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #ccc; transition: .4s; border-radius: 28px;
+    }
+    .toggle-switch .slider:before {
+        position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px;
+        background-color: white; transition: .4s; border-radius: 50%;
+    }
+    .toggle-switch input:checked + .slider { background: var(--gradient-primary); }
+    .toggle-switch input:checked + .slider:before { transform: translateX(22px); }
+
+    /* --- Payment Method Cards --- */
+    .payment-methods-grid { display: flex; flex-direction: column; gap: 1rem; }
+    .payment-method-card {
+        display: flex; align-items: center; padding: 1.5rem; border: 2px solid var(--color-border);
+        border-radius: var(--border-radius-md); cursor: pointer; transition: all 0.3s ease;
+    }
+    .payment-method-card:hover { border-color: var(--color-primary-start); }
+    .payment-method-card.selected {
+        border-color: var(--color-primary-end);
+        box-shadow: 0 0 0 3px rgba(74, 0, 224, 0.15);
+    }
+    .payment-method-card.disabled { color: #aaa; background-color: #f5f5f5; cursor: not-allowed; border-color: var(--color-border); }
+    .payment-method-card input[type="radio"] { display: none; }
+    .payment-method-card .icon { font-size: 1.8rem; margin-right: 1rem; color: var(--color-text-muted); width: 40px; text-align: center; }
+    .payment-method-card .details { flex-grow: 1; }
+    .payment-method-card .details strong { display: block; font-size: 1.1rem; color: var(--color-text-dark); }
+    .payment-method-card .details span { color: var(--color-text-muted); }
+    .payment-method-card .balance { color: var(--color-success); font-weight: bold; }
+
+    /* --- Summary Sidebar --- */
+    .summary-item { display: flex; justify-content: space-between; padding: 12px 0; color: var(--color-text-muted); }
+    .summary-item strong { color: var(--color-text-dark); font-weight: 600; }
+    .summary-divider { margin: 1rem 0; border: 0; border-top: 1px solid var(--color-border); }
+    .summary-total {
+        padding-top: 1rem;
+        display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .summary-total .label { font-size: 1.2rem; font-weight: 700; color: var(--color-text-dark); }
+    .summary-total .price {
+        font-size: 2rem; font-weight: 800;
+        background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .discount-row { color: var(--color-success); font-weight: bold; }
+    
+    /* Voucher Section */
+    .voucher-section { margin-top: 2rem; }
+    .voucher-form { display: flex; gap: 10px; }
+    .voucher-form .form-control { text-transform: uppercase; }
+    .remove-voucher-link { text-align: right; margin-top: 1rem; font-size: 0.9rem; }
+    .remove-voucher-link a { color: var(--color-danger); text-decoration: none; }
+
+    /* Pay Button */
+    #pay-button { width: 100%; padding: 18px; font-size: 1.1rem; margin-top: 2rem; }
+
+    /* --- Responsive Adjustments --- */
+    @media (max-width: 992px) {
+        .checkout-container {
+            grid-template-columns: 1fr;
+        }
+        .checkout-sidebar {
+            /* Move summary to top on mobile */
+            order: -1;
+        }
+    }
 </style>
 
-<div class="card" style="max-width: 600px; margin: 2rem auto;">
-    <h2><i class="fas fa-shopping-cart"></i> Ringkasan Pesanan</h2>
-    
-    <% if (cart.type === 'domain') { %>
-        <p>Anda akan mendaftarkan domain:</p>
-        <div class="form-group" style="margin-top: 1rem;">
-            <div class="domain-edit-form">
-                <input type="text" id="domain-input" class="form-control" value="<%= cart.item.domain %>">
-                <button type="button" id="check-domain-btn" class="btn btn-secondary">Cek</button>
-            </div>
-            <div id="domain-status-message"></div>
+<div class="container checkout-container">
+    <div class="checkout-main">
+        <div class="checkout-card">
+            <h2><i class="fas fa-edit"></i> Konfigurasi Pesanan</h2>
+            
+            <% if (cart.type === 'domain') { %>
+                <p class="item-description">Anda akan mendaftarkan domain: <strong><%= cart.item.domain %></strong></p>
+                <div class="form-group">
+                    <div class="domain-edit-form">
+                        <input type="text" id="domain-input" class="form-control" value="<%= cart.item.domain %>">
+                        <button type="button" id="check-domain-btn" class="btn btn-sm btn-primary">Cek Ulang</button>
+                    </div>
+                    <div id="domain-status-message"></div>
+                </div>
+
+                <form id="options-form" action="/update-cart-options" method="POST">
+                    <div class="option-item">
+                        <h4>Periode Registrasi</h4>
+                        <div class="stepper-control">
+                            <button type="button" onclick="changePeriod(-1)">-</button>
+                            <input type="text" name="period" value="<%= cart.options.period %> Tahun" min="1" max="5" readonly>
+                            <button type="button" onclick="changePeriod(1)">+</button>
+                        </div>
+                    </div>
+                    <div class="option-item">
+                        <h4>Proteksi WHOIS</h4>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="buy_whois_protection" <%= cart.options.buy_whois_protection ? 'checked' : '' %> onchange="document.getElementById('options-form').submit()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </form>
+            <% } else { %>
+                <p class="item-description">Anda memesan produk: <strong><%= cart.item.name %></strong></p>
+            <% } %>
         </div>
 
-        <form id="options-form" action="/update-cart-options" method="POST">
-            <div style="margin-top: 1rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                    <h4>Periode Registrasi</h4>
-                    <div class="stepper">
-                        <button type="button" onclick="changePeriod(-1)">-</button>
-                        <input type="text" name="period" value="<%= cart.options.period %>" min="1" max="5" readonly>
-                        <button type="button" onclick="changePeriod(1)">+</button>
-                    </div>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h4>Proteksi WHOIS</h4>
-                    <label class="switch">
-                        <input type="checkbox" name="buy_whois_protection" <%= cart.options.buy_whois_protection ? 'checked' : '' %> onchange="document.getElementById('options-form').submit()">
-                        <span class="slider"></span>
+        <div class="checkout-card">
+            <h2><i class="fas fa-credit-card"></i> Pilih Metode Pembayaran</h2>
+            <form id="checkout-form" action="/process-checkout" method="POST">
+                <div class="payment-methods-grid">
+                    <label class="payment-method-card <%= user.creditBalance < cart.pricing.finalPrice ? 'disabled' : '' %>">
+                        <input type="radio" name="payment_method" value="credit" <%= user.creditBalance < cart.pricing.finalPrice ? 'disabled' : 'checked' %>>
+                        <div class="icon"><i class="fas fa-wallet"></i></div>
+                        <div class="details">
+                            <strong>Bayar dengan Saldo Akun</strong>
+                            <span class="balance">(Tersedia: Rp <%= user.creditBalance.toLocaleString('id-ID') %>)</span>
+                        </div>
+                    </label>
+                    <label class="payment-method-card">
+                        <input type="radio" name="payment_method" value="midtrans" <%= user.creditBalance < cart.pricing.finalPrice ? 'checked' : '' %>>
+                        <div class="icon"><i class="fas fa-university"></i></div>
+                        <div class="details">
+                            <strong>Pembayaran Online</strong>
+                            <span>Kartu Kredit, Transfer Bank, GoPay, dll.</span>
+                        </div>
                     </label>
                 </div>
-            </div>
-        </form>
-    <% } else { %>
-        <p>Anda memesan produk: <strong><%= cart.item.name %></strong></p>
-    <% } %>
-    
-    <hr style="margin: 2rem 0;">
-    
-    <div class="price-summary">
-        <div class="detail-item">
-            <span>Subtotal</span>
-            <strong>Rp <%= cart.pricing.subtotal.toLocaleString('id-ID') %></strong>
-        </div>
-        <% if (cart.discount && cart.discount.amount) { %>
-            <div class="detail-item discount-row">
-                <span>Diskon (<%= cart.discount.code %>)</span>
-                <strong>- Rp <%= cart.discount.amount.toLocaleString('id-ID') %></strong>
-            </div>
-        <% } %>
-        <hr>
-        <div class="detail-item" style="font-size: 1.2rem;">
-            <strong>Total Bayar</strong>
-            <strong>Rp <%= cart.pricing.finalPrice.toLocaleString('id-ID') %></strong>
+            </form>
         </div>
     </div>
-    
-    <% if (cart.discount && cart.discount.code) { %>
-        <div style="text-align: right; margin-top: 1rem;"><a href="/remove-voucher">Hapus Voucher (<%= cart.discount.code %>)</a></div>
-    <% } else { %>
-        <form action="/apply-voucher" method="POST" class="voucher-form">
-            <input type="text" name="code" class="form-control" placeholder="Masukkan Kode Voucher" required style="text-transform: uppercase;">
-            <button type="submit" class="btn btn-secondary" style="white-space: nowrap;">Terapkan</button>
-        </form>
-    <% } %>
 
-    <form id="checkout-form" action="/process-checkout" method="POST">
-        <div class="payment-options">
-            <h4 style="padding: 1rem 1rem 0 1rem;">Pilih Metode Pembayaran</h4>
-            <label class="payment-option <%= user.creditBalance < cart.pricing.finalPrice ? 'disabled' : '' %>">
-                <div class="icon"><i class="fas fa-wallet"></i></div>
-                <div class="details">
-                    <strong>Bayar dengan Saldo Akun</strong>
-                    <span class="balance">(Tersedia: Rp <%= user.creditBalance.toLocaleString('id-ID') %>)</span>
+    <div class="checkout-sidebar">
+        <div class="checkout-card">
+            <h2><i class="fas fa-receipt"></i> Ringkasan Pesanan</h2>
+            <div class="summary-item">
+                <span>Subtotal</span>
+                <strong>Rp <%= cart.pricing.subtotal.toLocaleString('id-ID') %></strong>
+            </div>
+            <% if (cart.discount && cart.discount.amount) { %>
+                <div class="summary-item discount-row">
+                    <span>Diskon (<%= cart.discount.code %>)</span>
+                    <strong>- Rp <%= cart.discount.amount.toLocaleString('id-ID') %></strong>
                 </div>
-                <input type="radio" name="payment_method" value="credit" <%= user.creditBalance < cart.pricing.finalPrice ? 'disabled' : 'checked' %>>
-                <div class="radio-custom"></div>
-            </label>
-            <label class="payment-option">
-                <div class="icon"><i class="fas fa-credit-card"></i></div>
-                <div class="details">
-                    <strong>Pembayaran Online</strong>
-                    <span>Kartu Kredit, Transfer Bank, GoPay, dll.</span>
-                </div>
-                <input type="radio" name="payment_method" value="midtrans" <%= user.creditBalance < cart.pricing.finalPrice ? 'checked' : '' %>>
-                <div class="radio-custom"></div>
-            </label>
+            <% } %>
+
+            <hr class="summary-divider">
+
+            <div class="summary-total">
+                <span class="label">Total Bayar</span>
+                <span class="price">Rp <%= cart.pricing.finalPrice.toLocaleString('id-ID') %></span>
+            </div>
+
+            <div class="voucher-section">
+                <% if (cart.discount && cart.discount.code) { %>
+                    <div class="remove-voucher-link"><a href="/remove-voucher">Hapus Voucher (<%= cart.discount.code %>)</a></div>
+                <% } else { %>
+                    <form action="/apply-voucher" method="POST" class="voucher-form">
+                        <input type="text" name="code" class="form-control" placeholder="Kode Voucher" required>
+                        <button type="submit" class="btn btn-sm btn-secondary" style="white-space: nowrap;">Gunakan</button>
+                    </form>
+                <% } %>
+            </div>
+
+            <button type="submit" id="pay-button" class="btn btn-primary" form="checkout-form">
+                Lanjutkan Pembayaran
+            </button>
         </div>
-        <button type="submit" id="pay-button" class="btn btn-primary" style="width: 100%; margin-top: 2rem; padding: 15px; font-size: 1.1rem;">
-            Lanjutkan Pembayaran
-        </button>
-    </form>
+    </div>
 </div>
 
 <script>
+    // Update payment card selection UI
+    const paymentCards = document.querySelectorAll('.payment-method-card');
+    paymentCards.forEach(card => {
+        const radio = card.querySelector('input[type="radio"]');
+        if (radio.checked) {
+            card.classList.add('selected');
+        }
+        card.addEventListener('click', () => {
+            if (card.classList.contains('disabled')) return;
+            paymentCards.forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            radio.checked = true;
+        });
+    });
+
+    // --- All your existing JS logic from the original file ---
+    // This logic is well-written and should work without changes
+    // as long as the element IDs are preserved, which they are.
     const domainInput = document.getElementById('domain-input');
     const checkBtn = document.getElementById('check-domain-btn');
     const statusMsg = document.getElementById('domain-status-message');
     const payButton = document.getElementById('pay-button');
-    const originalDomain = domainInput.value;
+    const originalDomain = domainInput ? domainInput.value : null;
 
-    domainInput.addEventListener('input', () => {
-        if (domainInput.value.trim() !== originalDomain) {
+    if (domainInput) {
+        domainInput.addEventListener('input', () => {
+            if (domainInput.value.trim() !== originalDomain) {
+                payButton.disabled = true;
+                payButton.style.opacity = '0.6';
+                statusMsg.innerHTML = '<span style="color: #f59e0b;">Nama domain diubah. Harap klik "Cek Ulang" untuk validasi.</span>';
+            } else {
+                payButton.disabled = false;
+                payButton.style.opacity = '1';
+                statusMsg.innerHTML = '';
+            }
+        });
+
+        checkBtn.addEventListener('click', async () => {
+            const newDomain = domainInput.value.trim();
+            if (newDomain === originalDomain) {
+                statusMsg.innerHTML = '<span class="status-available">Domain valid.</span>';
+                payButton.disabled = false;
+                payButton.style.opacity = '1';
+                return;
+            }
+
+            statusMsg.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; margin: 0;"></div>';
             payButton.disabled = true;
-            statusMsg.innerHTML = '<span style="color: var(--nexus-warning);">Nama domain diubah. Harap klik "Cek" untuk validasi.</span>';
-        } else {
-            payButton.disabled = false;
-            statusMsg.innerHTML = '';
-        }
-    });
+            payButton.style.opacity = '0.6';
 
-    checkBtn.addEventListener('click', async () => {
-        const newDomain = domainInput.value.trim();
-        if (newDomain === originalDomain) {
-            statusMsg.innerHTML = '<span class="status-available">Domain valid.</span>';
-            payButton.disabled = false;
-            return;
-        }
-
-        statusMsg.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; margin: 0;"></div>';
-        payButton.disabled = true;
-
-        try {
-            const checkRes = await fetch('/check-domain', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ keyword: newDomain })
-            });
-            const checkData = await checkRes.json();
-            
-            if (checkData[0] && checkData[0].status === 'available') {
-                statusMsg.innerHTML = '<span>Mengupdate keranjang...</span>';
-                const updateRes = await fetch('/update-cart-domain', {
+            try {
+                const checkRes = await fetch('/check-domain', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ newDomain })
+                    body: JSON.stringify({ keyword: newDomain })
                 });
-                if (updateRes.ok) {
-                    window.location.reload();
+                const checkData = await checkRes.json();
+                
+                if (checkData[0] && checkData[0].status === 'available') {
+                    statusMsg.innerHTML = '<span>Mengupdate keranjang...</span>';
+                    const updateRes = await fetch('/update-cart-domain', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ newDomain })
+                    });
+                    if (updateRes.ok) {
+                        window.location.reload();
+                    } else {
+                        throw new Error('Gagal mengupdate keranjang.');
+                    }
                 } else {
-                    throw new Error('Gagal mengupdate keranjang.');
+                    statusMsg.innerHTML = '<span class="status-taken">Domain ini sudah diambil atau tidak valid.</span>';
                 }
-            } else {
-                statusMsg.innerHTML = '<span class="status-taken">Domain ini sudah diambil atau tidak valid.</span>';
+            } catch (error) {
+                statusMsg.innerHTML = `<span class="status-taken">Error: ${error.message}</span>`;
             }
-        } catch (error) {
-            statusMsg.innerHTML = `<span class="status-taken">Error: ${error.message}</span>`;
-        }
-    });
+        });
+    }
 
     function changePeriod(amount) {
         const input = document.querySelector('input[name="period"]');
-        let value = parseInt(input.value) + amount;
-        if (value >= 1 && value <= 5) {
-            input.value = value;
-            document.getElementById('options-form').submit();
+        if (!input) return;
+        let currentValue = parseInt(input.value) || 1;
+        let newValue = currentValue + amount;
+        
+        if (newValue >= 1 && newValue <= 5) {
+            // We need to create a hidden input for the actual numeric value to be submitted
+            let form = document.getElementById('options-form');
+            let hiddenInput = form.querySelector('input[name="numeric_period"]');
+            if (!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'period';
+                form.appendChild(hiddenInput);
+            }
+            hiddenInput.value = newValue;
+            form.submit();
         }
     }
 
     const checkoutForm = document.getElementById('checkout-form');
+    payButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        checkoutForm.dispatchEvent(new Event('submit', { cancelable: true }));
+    });
+
     checkoutForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;

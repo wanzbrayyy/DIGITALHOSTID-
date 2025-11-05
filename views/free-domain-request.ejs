@@ -1,28 +1,98 @@
 <%- include('partials/header', { title: title }) %>
 
-<div class="card" style="max-width: 600px; margin: 2rem auto;">
-    <h1>Formulir Permintaan Domain Gratis</h1>
-    <p>Khusus untuk organisasi non-profit, institusi pendidikan, atau proyek open-source yang terverifikasi.</p>
+<style>
+    /*
+    ============================================
+    --- FREE DOMAIN REQUEST PAGE STYLING ---
+    ============================================
+    */
+    .page-container {
+        padding-top: 4rem;
+        padding-bottom: 4rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+    }
+
+    .form-card {
+        width: 100%;
+        max-width: 650px;
+        background-color: white;
+        border-radius: var(--border-radius-lg);
+        padding: 2.5rem;
+        box-shadow: var(--shadow-lg);
+        text-align: center;
+    }
+    .form-card h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: var(--color-text-dark);
+    }
+    .form-card p {
+        font-size: 1.1rem;
+        color: var(--color-text-muted);
+        margin-bottom: 2.5rem;
+    }
     
-    <form action="/free-domain-request" method="POST" style="margin-top: 1.5rem;">
-        <div class="form-group">
-            <label for="name">Nama Lengkap Anda</label>
-            <input type="text" id="name" name="name" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="email">Alamat Email Kontak</label>
-            <input type="email" id="email" name="email" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="domainName">Nama Domain yang Diinginkan</label>
-            <input type="text" id="domainName" name="domainName" class="form-control" required placeholder="proyekhebat.org">
-        </div>
-        <div class="form-group">
-            <label for="purpose">Jelaskan Tujuan & Proyek Anda</label>
-            <textarea id="purpose" name="purpose" class="form-control" rows="5" required placeholder="Jelaskan secara singkat mengenai organisasi/proyek Anda dan mengapa Anda membutuhkan domain gratis."></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%;">Kirim Permintaan</button>
-    </form>
+    .request-form { text-align: left; }
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--color-text-dark);
+    }
+    .form-group .form-control {
+        width: 100%;
+        padding: 16px 20px;
+        border-radius: var(--border-radius-md);
+        background-color: var(--color-bg-light);
+        border: 1px solid var(--color-border);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    .form-group .form-control:focus {
+        background-color: white;
+        border-color: var(--color-primary-start);
+        box-shadow: 0 0 0 3px rgba(74, 0, 224, 0.15);
+        outline: none;
+    }
+    .form-group { margin-bottom: 1.5rem; }
+    
+    .btn-submit {
+        width: 100%;
+        padding: 18px;
+        font-size: 1.1rem;
+        margin-top: 1rem;
+    }
+</style>
+
+<div class="container page-container">
+    <div class="form-card">
+        <h1>Formulir Domain Gratis</h1>
+        <p>Khusus untuk organisasi non-profit, institusi pendidikan, atau proyek open-source yang terverifikasi.</p>
+        
+        <form action="/free-domain-request" method="POST" class="request-form">
+            <div class="form-group">
+                <label for="name">Nama Lengkap Anda</label>
+                <input type="text" id="name" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Alamat Email Kontak</label>
+                <input type="email" id="email" name="email" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="domainName">Nama Domain yang Diinginkan</label>
+                <input type="text" id="domainName" name="domainName" class="form-control" required placeholder="proyekhebat.org">
+            </div>
+            <div class="form-group">
+                <label for="purpose">Jelaskan Tujuan & Proyek Anda</label>
+                <textarea id="purpose" name="purpose" class="form-control" rows="5" required placeholder="Jelaskan secara singkat mengenai organisasi/proyek Anda dan mengapa Anda membutuhkan domain gratis."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-submit">Kirim Permintaan</button>
+        </form>
+    </div>
 </div>
 
 <%- include('partials/footer') %>

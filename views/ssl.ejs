@@ -1,64 +1,147 @@
 <%- include('partials/header', { title: title }) %>
 
 <style>
-    .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--nexus-border-color); white-space: nowrap; }
-    table th { font-weight: 600; background-color: #f9fafb; }
-
-    .price-display strong {
-        color: var(--nexus-primary-dark);
+    /*
+    ============================================
+    --- SSL PAGE STYLING ---
+    ============================================
+    */
+    .page-container {
+        padding-top: 4rem;
+        padding-bottom: 4rem;
     }
-    .price-display .price-original {
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 3.5rem;
+    }
+    .page-header h1 {
+        font-size: clamp(2.5rem, 5vw, 3.5rem);
+        font-weight: 800;
+        margin-bottom: 1rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .page-header p {
+        font-size: 1.1rem;
+        color: var(--color-text-muted);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* --- SSL Product List --- */
+    .ssl-product-list {
+        display: grid;
+        gap: 1.5rem;
+    }
+    .ssl-product-card {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 1.5rem 2rem;
+        background-color: white;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-md);
+        transition: all 0.3s ease;
+        border: 1px solid var(--color-border);
+    }
+    .ssl-product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--color-primary-start);
+    }
+
+    .product-info h3 {
+        font-size: 1.3rem;
+        color: var(--color-text-dark);
+        margin-bottom: 0.25rem;
+    }
+    .product-info small {
+        color: var(--color-text-muted);
+        font-weight: 500;
+    }
+
+    .product-feature {
+        color: var(--color-text-dark);
+        font-weight: 500;
+    }
+    .product-feature i {
+        margin-right: 8px;
+        color: var(--color-primary-start);
+    }
+
+    .product-price .price {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--color-text-dark);
+    }
+    .product-price .price-original {
+        font-size: 0.9rem;
         text-decoration: line-through;
-        color: var(--nexus-text-gray);
-        font-size: 0.85rem;
+        color: var(--color-text-muted);
         margin-left: 8px;
+    }
+    .product-actions { text-align: right; }
+
+    /* Responsive SSL Cards */
+    @media (max-width: 992px) {
+        .ssl-product-card {
+            grid-template-columns: 1fr;
+            text-align: center;
+        }
+        .product-info, .product-feature, .product-price {
+            padding: 1rem 0;
+            border-bottom: 1px dashed var(--color-border);
+        }
+        .product-actions {
+            text-align: center;
+            padding-top: 1rem;
+        }
+        .ssl-product-card .btn {
+            width: 100%;
+        }
     }
 </style>
 
-<div class="container" style="padding-top: 2rem; padding-bottom: 2rem;">
- /style>
+<div class="container page-container">
+    <div class="page-header">
+        <h1>Beli Sertifikat SSL</h1>
+        <p>Amankan website Anda, bangun kepercayaan pengunjung, dan tingkatkan peringkat SEO dengan enkripsi SSL terpercaya.</p>
+    </div>
 
-
-<h1>Beli Sertifikat SSL</h1>
-<p>Amankan website Anda dan tingkatkan kepercayaan pengunjung dengan enkripsi SSL.</p>
-
-<div class="table-wrapper card">
-    <table>
-        <thead>
-            <tr>
-                <th>Nama Produk</th>
-                <th>Tipe</th>
-                <th>Validasi</th>
-                <th>Harga/Tahun</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% if (sslProducts && sslProducts.length > 0) { %>
-                <% sslProducts.forEach(product => { %>
-                    <tr>
-                        <td><strong><%= product.name %></strong><br><small><%= product.brand %></small></td>
-                        <td><%= product.ssl_type %> <%= product.is_wildcard ? 'Wildcard' : '' %></td>
-                        <td><%= product.features.validation %></td>
-                        <td>
-                            <strong>Rp <%= product.price.toLocaleString('id-ID') %></strong>
-                            <% if (product.has_override && product.price < product.original_price) { %>
-                                <span class="price-original">Rp <%= product.original_price.toLocaleString('id-ID') %></span>
-                            <% } %>
-                        </td>
-                        <td>
-                            <!-- **PERBAIKAN: Gunakan 'priceId' yang baru** -->
-                            <a href="/ssl/order/<%= product.priceId %>" class="btn btn-primary btn-sm">Pesan</a>
-                        </td>
-                    </tr>
-                <% }) %>
-            <% } else { %>
-                <tr><td colspan="5" style="text-align: center; padding: 20px;">Produk SSL tidak tersedia saat ini.</td></tr>
-            <% } %>
-        </tbody>
-    </table>
+    <div class="ssl-product-list">
+        <% if (sslProducts && sslProducts.length > 0) { %>
+            <% sslProducts.forEach(product => { %>
+                <div class="ssl-product-card">
+                    <div class="product-info">
+                        <h3><%= product.name %></h3>
+                        <small>Brand: <%= product.brand %></small>
+                    </div>
+                    <div class="product-feature">
+                        <i class="fas fa-cube"></i> <%= product.ssl_type %> <%= product.is_wildcard ? 'Wildcard' : '' %>
+                    </div>
+                    <div class="product-feature">
+                        <i class="fas fa-check-double"></i> <%= product.features.validation %> Validation
+                    </div>
+                    <div class="product-price">
+                        <span class="price">Rp <%= product.price.toLocaleString('id-ID') %></span>
+                        <% if (product.has_override && product.price < product.original_price) { %>
+                            <span class="price-original">Rp <%= product.original_price.toLocaleString('id-ID') %></span>
+                        <% } %>
+                    </div>
+                    <div class="product-actions">
+                        <a href="/ssl/order/<%= product.priceId %>" class="btn btn-secondary">Pesan Sekarang</a>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="card" style="text-align: center; padding: 40px;">
+                <p>Produk SSL tidak tersedia saat ini. Silakan hubungi kami untuk informasi lebih lanjut.</p>
+            </div>
+        <% } %>
+    </div>
 </div>
 
 <%- include('partials/footer') %>

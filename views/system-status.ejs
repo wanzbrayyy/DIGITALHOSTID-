@@ -1,25 +1,134 @@
 <%- include('partials/header', { title: title }) %>
+
 <style>
-    .status-item { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid #eee; }
-    .status-badge { padding: 5px 12px; border-radius: 20px; font-weight: bold; color: white; }
-    .status-operational { background-color: var(--nexus-success); }
-    .status-maintenance { background-color: var(--nexus-primary); }
-    .status-degraded-performance { background-color: var(--nexus-warning); }
-    .status-outage { background-color: var(--nexus-danger); }
+    /*
+    ============================================
+    --- SYSTEM STATUS PAGE STYLING ---
+    ============================================
+    */
+    :root {
+        --status-operational-bg: #e7f7f2;
+        --status-operational-fg: #0d8a59;
+        --status-maintenance-bg: #eef3ff;
+        --status-maintenance-fg: #4a00e0;
+        --status-degraded-bg: #fff8e8;
+        --status-degraded-fg: #f59e0b;
+        --status-outage-bg: #feedee;
+        --status-outage-fg: #ef4444;
+    }
+    .page-container {
+        padding-top: 4rem;
+        padding-bottom: 4rem;
+    }
+    .page-header {
+        text-align: center;
+        margin-bottom: 3.5rem;
+    }
+    .page-header h1 {
+        font-size: clamp(2.5rem, 5vw, 3.5rem);
+        font-weight: 800;
+        margin-bottom: 1rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .page-header p {
+        font-size: 1.1rem;
+        color: var(--color-text-muted);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .status-list {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .status-item {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem;
+    }
+    .status-indicator {
+        font-size: 1.8rem;
+        width: 50px;
+        height: 50px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    .status-indicator-operational { background-color: var(--status-operational-bg); color: var(--status-operational-fg); }
+    .status-indicator-maintenance { background-color: var(--status-maintenance-bg); color: var(--status-maintenance-fg); }
+    .status-indicator-degraded-performance { background-color: var(--status-degraded-bg); color: var(--status-degraded-fg); }
+    .status-indicator-outage { background-color: var(--status-outage-bg); color: var(--status-outage-fg); }
+
+    .status-details {
+        flex-grow: 1;
+    }
+    .status-details h3 {
+        margin: 0 0 0.25rem 0;
+        font-size: 1.2rem;
+        color: var(--color-text-dark);
+    }
+    .status-details small {
+        color: var(--color-text-muted);
+    }
+
+    .status-badge {
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+    .status-badge-operational { background-color: var(--status-operational-bg); color: var(--status-operational-fg); }
+    .status-badge-maintenance { background-color: var(--status-maintenance-bg); color: var(--status-maintenance-fg); }
+    .status-badge-degraded-performance { background-color: var(--status-degraded-bg); color: var(--status-degraded-fg); }
+    .status-badge-outage { background-color: var(--status-outage-bg); color: var(--status-outage-fg); }
+
+    @media(max-width: 576px) {
+        .status-badge { display: none; } /* Hide redundant badge on mobile */
+    }
+
 </style>
-<div class="card">
-    <h1>Status Sistem</h1>
-    <p>Status operasional layanan kami secara real-time.</p>
-    <% if (services && services.length > 0) { services.forEach(service => { %>
-        <div class="status-item">
-            <div>
-                <h3 style="margin: 0;"><%= service.name %></h3>
-                <small style="color: #888;"><%= service.description || 'Semua sistem berjalan normal.' %></small>
+
+<div class="container page-container">
+    <div class="page-header">
+        <h1>Status Sistem</h1>
+        <p>Lacak status operasional semua layanan kami secara real-time. Jika Anda mengalami masalah, periksa halaman ini terlebih dahulu.</p>
+    </div>
+
+    <div class="status-list">
+        <% if (services && services.length > 0) { %>
+            <% services.forEach(service => { %>
+                <% const statusClass = service.status.replace(/\s+/g, '-').toLowerCase(); %>
+                <% let iconClass = 'fa-check-circle'; %>
+                <% if (statusClass === 'maintenance') iconClass = 'fa-wrench'; %>
+                <% if (statusClass === 'degraded-performance') iconClass = 'fa-exclamation-triangle'; %>
+                <% if (statusClass === 'outage') iconClass = 'fa-times-circle'; %>
+
+                <div class="status-item">
+                    <div class="status-indicator status-indicator-<%= statusClass %>">
+                        <i class="fas <%= iconClass %>"></i>
+                    </div>
+                    <div class="status-details">
+                        <h3><%= service.name %></h3>
+                        <small><%= service.description || 'Semua sistem berjalan normal.' %></small>
+                    </div>
+                    <span class="status-badge status-badge-<%= statusClass %>"><%= service.status %></span>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="card" style="text-align: center; padding: 40px;">
+                <p>Status layanan tidak dapat dimuat saat ini. Silakan coba lagi nanti.</p>
             </div>
-            <span class="status-badge status-<%= service.status.replace(/\s+/g, '-').toLowerCase() %>"><%= service.status %></span>
-        </div>
-    <% }) } else { %>
-        <p>Status layanan tidak tersedia saat ini.</p>
-    <% } %>
+        <% } %>
+    </div>
 </div>
+
 <%- include('partials/footer') %>

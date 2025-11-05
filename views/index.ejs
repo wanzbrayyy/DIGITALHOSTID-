@@ -1,114 +1,331 @@
 <%- include('partials/header') %>
 
 <style>
-    .hero-section { position: relative; background-image: url('https://files.catbox.moe/sepzlr.png?q=80&w=2069&auto=format&fit=crop'); background-size: cover; background-position: center; color: var(--nexus-text-light); padding: 100px 0; text-align: center; z-index: 1; }
-    .hero-section::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, rgba(142, 68, 173, 0.8), rgba(31, 29, 43, 0.9)); z-index: -1; }
-    .promo-banner { background: linear-gradient(45deg, var(--nexus-primary), var(--nexus-primary-dark)); color: white; text-align: center; padding: 2rem; border-radius: var(--nexus-radius); margin: 4rem auto; box-shadow: 0 10px 30px rgba(130, 170, 255, 0.3); }
-    #domain-search-form { display: flex; max-width: 700px; margin: 0 auto; box-shadow: var(--nexus-shadow); border-radius: 50px; }
-    #domain-input { flex-grow: 1; padding: 18px 25px; border: 2px solid transparent; font-size: 1rem; border-radius: 50px 0 0 50px; outline: none; }
-    #domain-search-button { padding: 18px 35px; border-radius: 0 50px 50px 0; background: var(--nexus-secondary); color: white; border: none; cursor: pointer; font-size: 1rem; font-weight: 600; }
-    #domain-results { margin-top: 35px; max-width: 700px; margin-left: auto; margin-right: auto; }
-    .suggestion-item { background: white; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-radius: var(--nexus-radius); box-shadow: var(--nexus-shadow); margin-bottom: 12px; }
-    
-    .domain-pricing-homepage { padding: 60px 0; }
-    .domain-pricing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
-    .domain-price-card { display: flex; flex-direction: column; text-align: center; padding: 1.5rem 1rem; border-radius: var(--nexus-radius); border: 1px solid #eee; transition: all 0.3s ease; }
-    .domain-price-card:hover { transform: translateY(-5px); box-shadow: var(--nexus-shadow); border-color: var(--nexus-primary); }
-    .domain-price-card .tld { font-size: 1.5rem; font-weight: 700; color: var(--nexus-text-dark); }
-    .domain-price-card .price { font-size: 1.2rem; font-weight: 600; color: var(--nexus-primary-dark); margin: 0.5rem 0; }
-    .domain-price-card .original-price { font-size: 0.9rem; color: var(--nexus-text-gray); text-decoration: line-through; }
-    .domain-price-card.promo { border-left: 4px solid var(--nexus-danger); }
-    .domain-price-card .btn { margin-top: auto; }
+    /*
+    ============================================
+    --- VIBRANT COLOR PALETTE & UI VARIABLES ---
+    ============================================
+    */
+    :root {
+        /* Primary Gradient: Energetic Purple/Violet */
+        --color-primary-start: #4A00E0;
+        --color-primary-end: #8E2DE2;
+        --gradient-primary: linear-gradient(45deg, var(--color-primary-start), var(--color-primary-end));
 
-    .pricing-section { padding: 60px 0; background-color: white; }
-    .pricing-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding: 1rem 1rem 2rem 1rem; margin: 0 -1rem; } .pricing-grid::-webkit-scrollbar { display: none; }
-    .pricing-card { scroll-snap-align: center; flex: 0 0 280px; margin: 0 15px; background: #f9fafb; border-radius: 16px; padding: 30px; border: 1px solid #eee; text-align: left; transition: all 0.3s ease; display: flex; flex-direction: column; }
-    .pricing-card:hover { transform: translateY(-10px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); border-color: var(--nexus-primary); }
+        /* Secondary Gradient: Vibrant Orange/Pink for CTAs */
+        --color-secondary-start: #FF512F;
+        --color-secondary-end: #DD2476;
+        --gradient-secondary: linear-gradient(45deg, var(--color-secondary-start), var(--color-secondary-end));
+
+        /* Backgrounds & Text Colors */
+        --color-bg-dark: #12101a;
+        --color-bg-light: #f7f8fc;
+        --color-text-dark: #2c3e50;
+        --color-text-light: #ffffff;
+        --color-text-muted: #8492a6;
+
+        /* Accent Colors */
+        --color-success: #10b981;
+        --color-danger: #ef4444;
+        --color-border: #e5e7eb;
+
+        /* Shadows & Borders */
+        --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+        --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+        --shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
+        --border-radius-md: 12px;
+        --border-radius-lg: 16px;
+    }
+
+    /* --- General Section Styling --- */
+    .section { padding: 80px 0; }
+    .section-title { text-align: center; margin-bottom: 3.5rem; max-width: 650px; margin-left: auto; margin-right: auto; }
+    .section-title h2 { margin-bottom: 1rem; font-size: clamp(2rem, 5vw, 2.8rem); color: var(--color-text-dark); font-weight: 800; }
+    .section-title p { color: var(--color-text-muted); font-size: 1.1rem; line-height: 1.7; }
+
+    /*
+    ============================================
+    --- REVAMPED HERO SECTION ---
+    ============================================
+    */
+    .hero-section {
+        padding: 100px 0;
+        color: var(--color-text-light);
+        background-color: var(--color-bg-dark);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill='%231a1624' fill-opacity='0.4'%3E%3Crect x='0' y='0' width='100' height='1'/%3E%3Crect x='0' y='0' width='1' height='100'/%3E%3C/g%3E%3C/svg%3E");
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-section::before {
+        content: ''; position: absolute; top: -20%; left: -20%; width: 600px; height: 600px;
+        background: radial-gradient(circle, rgba(74, 0, 224, 0.25), transparent 70%); z-index: 0;
+    }
+    .hero-content { display: flex; align-items: center; justify-content: space-between; gap: 3rem; position: relative; z-index: 1; }
+    .hero-text { max-width: 55%; }
+    .hero-text h1 { font-size: clamp(2.8rem, 6vw, 4rem); margin-bottom: 1rem; line-height: 1.2; font-weight: 800; }
+    .hero-text p { font-size: 1.25rem; opacity: 0.8; margin-bottom: 2.5rem; }
+    .hero-actions { display: flex; gap: 1rem; }
+    .hero-illustration { max-width: 45%; }
+    .hero-illustration img { width: 100%; max-width: 500px; height: auto; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.3)); }
+
+    /* --- Redesigned Buttons --- */
+    .btn { padding: 14px 32px; border-radius: 50px; font-weight: 600; transition: all 0.3s ease; border: none; box-shadow: var(--shadow-md); }
+    .btn-primary { background: var(--gradient-primary); color: white; box-shadow: 0 5px 20px rgba(142, 45, 226, 0.4); }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(142, 45, 226, 0.5); }
+    .btn-secondary { background: var(--gradient-secondary); color: white; box-shadow: 0 5px 20px rgba(221, 36, 118, 0.4); }
+    .btn-secondary:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(221, 36, 118, 0.5); }
+
+    /*
+    ============================================
+    --- PROMO BANNER SECTION ---
+    ============================================
+    */
+    .promo-banner {
+        background: var(--gradient-secondary);
+        color: white;
+        text-align: center;
+        padding: 2.5rem;
+        border-radius: var(--border-radius-lg);
+        margin-top: -3rem; /* Pull it up slightly */
+        position: relative;
+        z-index: 10;
+        box-shadow: 0 10px 30px rgba(221, 36, 118, 0.3);
+    }
+    .promo-banner h3 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .promo-banner .btn-light {
+        background: white;
+        color: var(--color-secondary-end);
+        box-shadow: var(--shadow-sm);
+        margin-top: 1rem;
+    }
+    .promo-banner .btn-light:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md);
+    }
+
+    /* --- Domain Search --- */
+    #domain-search { background-color: var(--color-bg-light); padding-top: 80px; }
+    #domain-search-form { display: flex; max-width: 700px; margin: 2rem auto 0 auto; border-radius: 50px; box-shadow: var(--shadow-lg); overflow: hidden; }
+    #domain-input { flex-grow: 1; padding: 20px 30px; border: none; font-size: 1.1rem; outline: none; color: var(--color-text-dark); }
+    #domain-search-button { padding: 0 35px; background: var(--gradient-secondary); color: white; border: none; cursor: pointer; font-size: 1.1rem; font-weight: 600; }
+    .suggestion-item { border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); }
+    .status-available { color: var(--color-success); } .status-taken { color: var(--color-text-muted); }
+
+    /*
+    ============================================
+    --- DOMAIN PRICING HOMEPAGE ---
+    ============================================
+    */
+    .domain-pricing-homepage { background-color: var(--color-bg-light); padding-bottom: 80px; }
+    .domain-pricing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.5rem; }
+    .domain-price-card {
+        display: flex; flex-direction: column; text-align: center; padding: 2rem 1.5rem;
+        border-radius: var(--border-radius-md); border: 1px solid var(--color-border);
+        background-color: white; box-shadow: var(--shadow-md); transition: all 0.3s ease; position: relative;
+    }
+    .domain-price-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: var(--color-primary-start); }
+    .domain-price-card .tld { font-size: 1.8rem; font-weight: 700; color: var(--color-text-dark); }
+    .domain-price-card .price {
+        font-size: 1.5rem; font-weight: 700; margin: 0.75rem 0;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .domain-price-card .original-price { font-size: 1rem; color: var(--color-text-muted); text-decoration: line-through; }
+    .domain-price-card .btn { margin-top: auto; }
+    .domain-price-card.promo::before {
+        content: 'PROMO'; position: absolute; top: 10px; right: 10px;
+        background: var(--gradient-secondary); color: white; padding: 3px 8px;
+        font-size: 0.7rem; font-weight: 600; border-radius: 5px;
+    }
+
+    /* --- Upgraded Hosting Pricing Cards --- */
+    .pricing-section { overflow: hidden; background-color: white; }
+    .pricing-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2rem 15px; margin: 0 -15px; gap: 2rem; scrollbar-width: none; }
+    .pricing-grid::-webkit-scrollbar { display: none; }
+    .pricing-card {
+        scroll-snap-align: center; flex: 0 0 320px; background: white; border-radius: var(--border-radius-lg);
+        border: 1px solid var(--color-border); text-align: left; transition: all 0.3s ease;
+        display: flex; flex-direction: column; box-shadow: var(--shadow-md); position: relative; overflow: hidden;
+    }
+    .pricing-card-header { padding: 2rem 2rem 1.5rem 2rem; }
+    .pricing-card-body { padding: 0 2rem 2rem 2rem; flex-grow: 1; display: flex; flex-direction: column; }
+    .pricing-card h3 { display: flex; align-items: center; gap: 12px; font-size: 1.5rem; color: var(--color-text-dark); }
+    .pricing-card p { color: var(--color-text-muted); margin-top: 0.5rem; min-height: 50px; }
+    .pricing-card .price-tag { font-size: 3rem; font-weight: 800; margin: 1.5rem 0; font-family: 'Montserrat', sans-serif; color: var(--color-text-dark); }
+    .pricing-card .price-tag sup { font-size: 1.5rem; font-weight: 600; color: var(--color-text-muted); }
+    .pricing-card .price-tag span { font-size: 1rem; color: var(--color-text-muted); font-weight: 500; }
+    .pricing-card ul { list-style: none; margin: 1.5rem 0; padding: 0; }
+    .pricing-card ul li { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+    .pricing-card ul li i { color: var(--color-success); font-size: 1.2rem; }
+    .pricing-card form { margin-top: auto; }
+    .pricing-card.featured { transform: scale(1.05); border: 2px solid var(--color-primary-end); box-shadow: 0 15px 40px rgba(142, 45, 226, 0.2); }
+    .featured-badge { position: absolute; top: 20px; right: -40px; background: var(--gradient-primary); color: white; padding: 5px 40px; transform: rotate(45deg); font-size: 0.8rem; font-weight: 600; z-index: 1; }
+    .pricing-card.featured .price-tag { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    /* --- Other Sections --- */
+    .features-section { background-color: var(--color-bg-light); }
+    .feature-card {
+        text-align: center; padding: 2.5rem; border-radius: var(--border-radius-md);
+        border: 1px solid var(--color-border); background-color: white; transition: all 0.3s ease;
+    }
+    .feature-card:hover { transform: translateY(-10px); box-shadow: var(--shadow-lg); border-color: var(--color-primary-start); }
+    .feature-card .icon {
+        font-size: 2.5rem; color: var(--color-primary-start); margin-bottom: 1.5rem; display: inline-flex;
+        align-items: center; justify-content: center; background: linear-gradient(45deg, rgba(74,0,224,0.1), rgba(142,45,226,0.1));
+        width: 80px; height: 80px; border-radius: 50%;
+    }
+
+    /* --- Responsive Adjustments --- */
+    @media (max-width: 992px) { .hero-text { max-width: 100%; text-align: center; } .hero-actions { justify-content: center; } .hero-illustration { display: none; } }
+    @media (max-width: 768px) { .section { padding: 60px 0; } .pricing-card { flex: 0 0 85%; } .pricing-card.featured { transform: scale(1); } }
+    @media (max-width: 480px) {
+        .hero-actions { flex-direction: column; align-items: center; }
+        #domain-search-form { flex-direction: column; border-radius: 20px; }
+        #domain-input { border-radius: 20px 20px 0 0; text-align: center; }
+        #domain-search-button { border-radius: 0 0 20px 20px; padding: 18px; }
+        .domain-pricing-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    }
 </style>
 
 <main>
-    <section class="hero-section">
+    <section class="hero-section" aria-labelledby="hero-title">
         <div class="container">
-            <h1>Semua yang Anda Butuhkan untuk Sukses Online</h1>
-            <p>Mulai dari domain, hosting, hingga alat canggih untuk mengembangkan bisnis Anda.</p>
-            <a href="#pricing" class="btn btn-primary" style="margin-top: 1.5rem;">Lihat Paket Sekarang</a>
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 id="hero-title">DIGITALHOSTID</h1>
+                    <p>DigitalHostID adalah platform andal untuk domain, hosting secepat kilat, dan keamanan SSL. Semua yang Anda butuhkan untuk sukses online.</p>
+                    <% if (!user) { %>
+                        <div class="hero-actions">
+                            <a href="/register" class="btn btn-primary">Mulai Sekarang</a>
+                            <a href="/login" class="btn" style="background: rgba(255,255,255,0.1); color: white; box-shadow: none;">Login</a>
+                        </div>
+                    <% } %>
+                </div>
+                <div class="hero-illustration">
+                    <img src="https://files.catbox.moe/sepzlr.png" alt="Ilustrasi Web Hosting Modern">
+                </div>
+            </div>
         </div>
     </section>
 
     <div class="container">
         <% if (typeof promo !== 'undefined' && promo && promo.isActive) { %>
-            <section class="promo-banner">
-                <h3><%= promo.title %></h3><p><%= promo.message %></p>
-                <% if (promo.link) { %><a href="<%= promo.link %>" class="btn" style="margin-top: 1rem; background: white; color: var(--nexus-primary-dark);">Lihat Selengkapnya</a><% } %>
+            <section class="promo-banner" aria-label="Promo Saat Ini">
+                <h3><%= promo.title %></h3>
+                <p><%= promo.message %></p>
+                <% if (promo.link) { %><a href="<%= promo.link %>" class="btn btn-light">Lihat Selengkapnya</a><% } %>
             </section>
         <% } %>
     </div>
 
-    <section id="domain-search" class="domain-search-section">
+    <section id="domain-search" class="section" aria-labelledby="domain-search-title">
         <div class="container">
-            <h2>Wujudkan Ide Anda dengan Domain Sempurna</h2>
+            <div class="section-title">
+                <h2 id="domain-search-title">Temukan Nama Domain Sempurna Anda</h2>
+                <p>Mulai perjalanan online Anda dengan nama yang unik dan mudah diingat.</p>
+            </div>
             <form id="domain-search-form">
-                <input type="text" id="domain-input" placeholder="contoh: wanzofc.site" required>
-                <button type="submit" id="domain-search-button"><i class="fas fa-search"></i> Cari</button>
+                <input type="text" id="domain-input" placeholder="contoh: startupkeren.id" required>
+                <button type="submit" id="domain-search-button" aria-label="Cari Domain">Cari</button>
             </form>
             <div id="domain-results"></div>
         </div>
     </section>
 
-    <section class="domain-pricing-homepage">
+    <section class="domain-pricing-homepage section" aria-labelledby="domain-promo-title">
         <div class="container">
-            <h2 style="text-align: center; margin-bottom: 2rem;">Promo Domain Terpopuler</h2>
+            <div class="section-title">
+                <h2 id="domain-promo-title">Harga Spesial Domain Populer</h2>
+            </div>
             <div class="domain-pricing-grid">
                 <% if (domainPrices && domainPrices.length > 0) { %>
                     <% domainPrices.forEach(item => { %>
                         <div class="domain-price-card <%= item.hasPromo ? 'promo' : '' %>">
-                            <div class="tld"><%= item.extension %></div>
+                            <div class="tld">.<%= item.extension.replace('.', '') %></div>
                             <div class="price">Rp <%= item.price.toLocaleString('id-ID') %></div>
                             <% if (item.price < item.originalPrice) { %>
                                 <div class="original-price">Rp <%= item.originalPrice.toLocaleString('id-ID') %></div>
                             <% } %>
-                            <a href="/order-domain?domain=namadomain<%= item.extension %>&price=<%= item.price %>" class="btn btn-sm btn-primary">Pesan</a>
+                            <a href="/order-domain?domain=namadomain.<%= item.extension.replace('.', '') %>&price=<%= item.price %>" class="btn btn-sm btn-primary">Daftar</a>
                         </div>
                     <% }) %>
+                <% } else { %>
+                    <p style="text-align:center; grid-column: 1 / -1;">Gagal memuat harga domain.</p>
                 <% } %>
             </div>
-            <div style="text-align: center; margin-top: 2rem;">
+            <div style="text-align: center; margin-top: 3rem;">
                 <a href="/domain-pricing" class="btn btn-secondary">Lihat Semua Harga Domain</a>
             </div>
         </div>
     </section>
 
-    <section id="pricing" class="pricing-section">
+    <section id="pricing" class="pricing-section section" aria-labelledby="hosting-package-title">
         <div class="container">
-            <h2>Pilih Paket Terbaik Anda</h2>
-            <div class="pricing-slider-container">
-                <div class="pricing-grid" id="pricing-grid">
-                    <% if (products && products.length > 0) { %>
-                        <% products.forEach(product => { %>
-                            <div class="pricing-card">
+            <div class="section-title">
+                <h2 id="hosting-package-title">Paket Hosting untuk Semua Kebutuhan</h2>
+                <p>Performa, keamanan, dan dukungan terbaik, dirancang untuk membantu Anda berkembang.</p>
+            </div>
+            <div class="pricing-grid">
+                <% if (products && products.length > 0) { %>
+                    <% products.forEach((product, index) => { %>
+                        <% const isFeatured = index === 1; %>
+                        <div class="pricing-card <%= isFeatured ? 'featured' : '' %>">
+                            <% if (isFeatured) { %><div class="featured-badge">Paling Populer</div><% } %>
+                            <div class="pricing-card-header">
                                 <h3><i class="<%= product.icon %>"></i> <%= product.name %></h3>
                                 <p><%= product.description %></p>
-                                <div><sup>Rp</sup><%= product.price.toLocaleString('id-ID') %><span>/<%= product.price_unit %></span></div>
+                            </div>
+                            <div class="pricing-card-body">
+                                <div class="price-tag"><sup>Rp</sup><%= (product.price / 1000).toLocaleString('id-ID', { maximumFractionDigits: 0 }) %>K<span>/bln</span></div>
                                 <ul>
                                     <% product.features.forEach(feature => { %>
                                         <li><i class="fas fa-check-circle"></i> <%= feature %></li>
                                     <% }) %>
                                 </ul>
-                                <form action="/add-to-cart" method="POST" style="margin-top: auto;">
-                                    <input type="hidden" name="type" value="product">
-                                    <input type="hidden" name="plan" value="<%= product.name %>">
-                                    <input type="hidden" name="price" value="<%= product.price %>">
-                                    <button type="submit" class="btn btn-primary" style="width: 100%;">Pilih <%= product.name %></button>
+                                <form action="/add-to-cart" method="POST">
+                                    <input type="hidden" name="type" value="product"><input type="hidden" name="plan" value="<%= product.name %>"><input type="hidden" name="price" value="<%= product.price %>">
+                                    <button type="submit" class="btn <%= isFeatured ? 'btn-secondary' : 'btn-primary' %>" style="width: 100%;">Pilih Paket</button>
                                 </form>
                             </div>
-                        <% }) %>
-                    <% } %>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <p style="text-align:center; width: 100%;">Paket hosting akan segera tersedia.</p>
+                <% } %>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section section" aria-labelledby="featured-services-title">
+        <div class="container">
+            <div class="section-title">
+                <h2 id="featured-services-title">Kenapa Memilih DigitalHostID?</h2>
+                <p>Kami menyediakan fondasi yang kokoh untuk kesuksesan digital Anda.</p>
+            </div>
+            <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                <div class="feature-card">
+                    <div class="icon"><i class="fas fa-server"></i></div>
+                    <h3>Hosting Cepat & Andal</h3>
+                    <p>Infrastruktur canggih kami memastikan website Anda selalu online dan dapat diakses dengan cepat oleh pengunjung.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Keamanan Terjamin</h3>
+                    <p>Dari SSL gratis hingga perlindungan malware, kami menjaga aset digital Anda tetap aman dari berbagai ancaman.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon"><i class="fas fa-headset"></i></div>
+                    <h3>Dukungan Ahli 24/7</h3>
+                    <p>Tim ahli kami selalu siap sedia membantu Anda kapan pun Anda membutuhkan, baik siang maupun malam.</p>
                 </div>
             </div>
         </div>
     </section>
 </main>
+
 <script>
+    // Script JavaScript Anda sudah baik dan tidak perlu diubah.
     document.addEventListener('DOMContentLoaded', () => {
         const domainForm = document.getElementById('domain-search-form');
         const domainInput = document.getElementById('domain-input');
@@ -117,28 +334,41 @@
         domainForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const keyword = domainInput.value.trim();
-            if (!keyword) return;
+            if (!keyword) {
+                domainResults.innerHTML = `<div style="text-align: center; color: var(--color-danger); margin-top: 1rem;">Harap masukkan nama domain untuk dicari.</div>`;
+                return;
+            }
             domainResults.innerHTML = '<div class="spinner"></div>';
             try {
-                const response = await fetch('/check-domain', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keyword }) });
-                const results = await response.json();
-                let resultsHTML = '<ul style="list-style:none; padding:0;">';
-                results.forEach(result => {
-                    let statusHTML = '';
-                    if (result.status === 'available') {
-                        // Di sini perlu lookup harga dinamis, untuk sementara kita arahkan ke halaman harga
-                        statusHTML = `<div><span class="status-available">TERSEDIA</span> <a href="/domain-pricing" class="btn btn-secondary btn-sm">Lihat Harga</a></div>`;
-                    } else {
-                        statusHTML = `<span class="status-taken">Sudah Diambil</span>`;
-                    }
-                    resultsHTML += `<li class="suggestion-item"><span>${result.name}</span> ${statusHTML}</li>`;
+                const response = await fetch('/check-domain', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ keyword }) 
                 });
+                if (!response.ok) { throw new Error('Gagal terhubung ke server.'); }
+                const results = await response.json();
+                let resultsHTML = '<ul style="list-style:none; padding:0; margin-top: 2rem;">';
+                if (results.length > 0) {
+                    results.forEach(result => {
+                        let statusHTML = '';
+                        if (result.status === 'available') {
+                            const orderUrl = `/order-domain?domain=${result.name}`;
+                            statusHTML = `<div><span class="status-available" style="margin-right: 1rem; font-weight:600;">TERSEDIA</span> <a href="${orderUrl}" class="btn btn-primary btn-sm">Pesan</a></div>`;
+                        } else {
+                            statusHTML = `<span class="status-taken">Sudah Diambil</span>`;
+                        }
+                        resultsHTML += `<li class="suggestion-item card" style="display:flex; justify-content: space-between; align-items: center; padding: 1rem;"><span style="font-weight:600;">${result.name}</span> ${statusHTML}</li>`;
+                    });
+                } else {
+                    resultsHTML = `<div style="text-align: center; color: var(--color-text-muted); margin-top: 1rem;">Tidak ada hasil untuk pencarian Anda.</div>`;
+                }
                 resultsHTML += '</ul>';
                 domainResults.innerHTML = resultsHTML;
             } catch (error) {
-                domainResults.innerHTML = `<div style="text-align: center; color: #ef4444;">Terjadi kesalahan koneksi.</div>`;
+                domainResults.innerHTML = `<div style="text-align: center; color: var(--color-danger); margin-top: 1rem;">Terjadi kesalahan koneksi. Silakan coba lagi nanti.</div>`;
             }
         });
     });
 </script>
+
 <%- include('partials/footer') %>

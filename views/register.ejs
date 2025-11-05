@@ -1,36 +1,220 @@
 <%- include('partials/header', { title: 'Registrasi' }) %>
 
-<div style="max-width: 700px; margin: 5vh auto;">
-    <div class="card">
-        <h1 style="text-align: center; margin-bottom: 2rem;">Buat Akun Baru</h1>
-        <% if (typeof error !== 'undefined' && error) { %><div class="alert alert-danger"><%= error %></div><% } %>
-        <form action="/register" method="POST">
-            <input type="hidden" name="plan" value="<%= typeof plan !== 'undefined' ? plan : '' %>">
-            <div class="grid-2">
-                <div class="form-group"><label for="name">Nama Lengkap</label><input type="text" id="name" name="name" class="form-control" required></div>
-                <div class="form-group"><label for="email">Alamat Email</label><input type="email" id="email" name="email" class="form-control" required></div>
-            </div>
-            <div class="grid-2">
-                <div class="form-group"><label for="password">Password</label><input type="password" id="password" name="password" class="form-control" required></div>
-                <div class="form-group"><label for="password_confirmation">Konfirmasi Password</label><input type="password" id="password_confirmation" name="password_confirmation" class="form-control" required></div>
-            </div>
-            <hr style="margin: 1.5rem 0;">
-            <div class="form-group"><label for="organization">Organisasi (opsional)</label><input type="text" id="organization" name="organization" class="form-control"></div>
-            <div class="form-group"><label for="street_1">Alamat</label><input type="text" id="street_1" name="street_1" class="form-control" required></div>
-            <div class="grid-2">
-                <div class="form-group"><label for="city">Kota</label><input type="text" id="city" name="city" class="form-control" required></div>
-                <div class="form-group"><label for="state">Provinsi</label><input type="text" id="state" name="state" class="form-control" required></div>
-            </div>
-            <div class="grid-2">
-                 <div class="form-group"><label for="postal_code">Kode Pos</label><input type="text" id="postal_code" name="postal_code" class="form-control" required></div>
-                 <div class="form-group"><label for="voice">Nomor Telepon</label><input type="tel" id="voice" name="voice" class="form-control" required></div>
-            </div>
-            <div class="form-group"><label for="country_code">Negara</label><select id="country_code" name="country_code" class="form-control" required><option value="ID" selected>Indonesia</option></select></div>
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Daftar & Lanjutkan</button>
-        </form>
-         <p style="text-align: center; margin-top: 1.5rem;">
-            Sudah punya akun? <a href="/login">Login di sini</a>
-        </p>
+<style>
+    /*
+    ============================================
+    --- AUTHENTICATION PAGE STYLING (LOGIN & REGISTER) ---
+    ============================================
+    */
+    body {
+        /* Override default padding-top for full-page layout */
+        padding-top: 0;
+        background-color: var(--color-bg-light);
+    }
+    .main-content { padding-bottom: 0; }
+    .top-bar { /* Make header float above */
+        background: transparent;
+        box-shadow: none;
+        position: absolute;
+    }
+    .top-bar-brand span { color: white; }
+
+    .auth-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        min-height: 100vh;
+    }
+
+    /* --- Branding Side (Left) --- */
+    .auth-brand-side {
+        background: var(--gradient-primary);
+        color: var(--color-text-light);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 3rem;
+        position: relative;
+    }
+    .brand-logo {
+        position: absolute;
+        top: 40px;
+        left: 40px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .brand-logo img { height: 40px; }
+    .brand-logo span { font-size: 1.5rem; font-family: 'Montserrat', sans-serif; font-weight: 700; color: white; }
+    .auth-brand-side h2 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    .auth-brand-side p {
+        font-size: 1.1rem;
+        opacity: 0.8;
+        max-width: 400px;
+    }
+    .auth-brand-side .illustration {
+        max-width: 450px;
+        width: 100%;
+        margin-top: 3rem;
+    }
+
+    /* --- Form Side (Right) --- */
+    .auth-form-side {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem;
+        background-color: white;
+    }
+    .auth-card {
+        width: 100%;
+        max-width: 700px; /* Wider card for register form */
+    }
+    .auth-card h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--color-text-dark);
+        margin-bottom: 0.75rem;
+    }
+    .auth-subtext {
+        font-size: 1rem;
+        color: var(--color-text-muted);
+        margin-bottom: 2.5rem;
+    }
+    .auth-subtext a {
+        color: var(--color-primary-start);
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .auth-subtext a:hover { text-decoration: underline; }
+
+    /* Form Inputs with Icons */
+    .input-group {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    .input-group .icon {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--color-text-muted);
+        font-size: 1.2rem;
+    }
+    .form-group .form-control { /* Specific for register page's simple layout */
+        width: 100%;
+        padding: 16px 20px;
+        border-radius: var(--border-radius-md);
+        background-color: var(--color-bg-light);
+        border: 1px solid var(--color-border);
+        font-size: 1rem;
+    }
+    .form-group .form-control:focus {
+        background-color: white;
+        border-color: var(--color-primary-start);
+        box-shadow: 0 0 0 3px rgba(74, 0, 224, 0.15);
+    }
+    .form-group { margin-bottom: 1rem; }
+    label { font-weight: 500; margin-bottom: 0.5rem; display: block; color: var(--color-text-dark); }
+    
+    /* Auth Button */
+    .btn-auth {
+        width: 100%;
+        padding: 18px;
+        font-size: 1.1rem;
+        margin-top: 1rem;
+    }
+    
+    /* Form Section divider */
+    .form-divider {
+        margin: 2rem 0;
+        border: 0;
+        border-top: 1px solid var(--color-border);
+    }
+    .form-section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: var(--color-text-dark);
+    }
+
+    /* Grid for Register Page */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+        .auth-container { grid-template-columns: 1fr; }
+        .auth-brand-side { display: none; }
+        .auth-form-side { padding: 2rem 1.5rem; }
+        .top-bar { position: fixed; background-color: white; box-shadow: var(--shadow-sm); }
+        .top-bar-brand span { color: var(--color-text-dark); }
+        body { padding-top: 70px; }
+    }
+    @media (max-width: 576px) {
+        .grid-2 { grid-template-columns: 1fr; gap: 1rem; }
+    }
+</style>
+
+<div class="auth-container">
+    <div class="auth-brand-side">
+        <a href="/" class="brand-logo">
+            <img src="https://files.catbox.moe/sepzlr.png" alt="Logo DigitalHostID">
+            <span>DigitalHostID</span>
+        </a>
+        <h2>Mulai Perjalanan Digital Anda</h2>
+        <p>Hanya butuh beberapa langkah untuk mendapatkan akses ke semua layanan premium kami.</p>
+        <img src="https://cdni.iconscout.com/illustration/premium/thumb/sign-up-3305942-2757110.png" alt="Register Illustration" class="illustration">
+    </div>
+
+    <div class="auth-form-side">
+        <div class="auth-card">
+            <h1>Buat Akun Baru</h1>
+            <p class="auth-subtext">
+                Sudah punya akun? <a href="/login">Login di sini</a>
+            </p>
+
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert alert-danger"><%= error %></div>
+            <% } %>
+
+            <form action="/register" method="POST">
+                <input type="hidden" name="plan" value="<%= typeof plan !== 'undefined' ? plan : '' %>">
+
+                <h3 class="form-section-title">Informasi Akun</h3>
+                <div class="grid-2">
+                    <div class="form-group"><label for="name">Nama Lengkap</label><input type="text" id="name" name="name" class="form-control" required></div>
+                    <div class="form-group"><label for="email">Alamat Email</label><input type="email" id="email" name="email" class="form-control" required></div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group"><label for="password">Password</label><input type="password" id="password" name="password" class="form-control" required></div>
+                    <div class="form-group"><label for="password_confirmation">Konfirmasi Password</label><input type="password" id="password_confirmation" name="password_confirmation" class="form-control" required></div>
+                </div>
+
+                <hr class="form-divider">
+
+                <h3 class="form-section-title">Detail Kontak</h3>
+                <div class="form-group"><label for="organization">Organisasi (opsional)</label><input type="text" id="organization" name="organization" class="form-control"></div>
+                <div class="form-group"><label for="street_1">Alamat</label><input type="text" id="street_1" name="street_1" class="form-control" required></div>
+                <div class="grid-2">
+                    <div class="form-group"><label for="city">Kota</label><input type="text" id="city" name="city" class="form-control" required></div>
+                    <div class="form-group"><label for="state">Provinsi</label><input type="text" id="state" name="state" class="form-control" required></div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group"><label for="postal_code">Kode Pos</label><input type="text" id="postal_code" name="postal_code" class="form-control" required></div>
+                    <div class="form-group"><label for="voice">Nomor Telepon</label><input type="tel" id="voice" name="voice" class="form-control" required></div>
+                </div>
+                <div class="form-group">
+                    <label for="country_code">Negara</label>
+                    <select id="country_code" name="country_code" class="form-control" required><option value="ID" selected>Indonesia</option></select>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-auth">Daftar & Lanjutkan</button>
+            </form>
+        </div>
     </div>
 </div>
 

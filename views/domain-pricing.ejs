@@ -1,29 +1,209 @@
 <%- include('partials/header', { title: title }) %>
 
 <style>
-    .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--nexus-border-color); white-space: nowrap; }
-    table th { font-weight: 600; background-color: #f9fafb; }
+    /*
+    ============================================
+    --- DOMAIN PRICING PAGE STYLING ---
+    ============================================
+    */
+    .pricing-page-container {
+        padding-top: 4rem;
+        padding-bottom: 4rem;
+    }
+
+    .pricing-header {
+        text-align: center;
+        margin-bottom: 3.5rem;
+    }
+    .pricing-header h1 {
+        font-size: clamp(2.5rem, 5vw, 3.5rem);
+        font-weight: 800;
+        margin-bottom: 1rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .pricing-header p {
+        font-size: 1.1rem;
+        color: var(--color-text-muted);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* --- Revamped Pricing Table --- */
+    .pricing-table-wrapper {
+        background-color: white;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+    }
+    .pricing-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .pricing-table thead th {
+        background-color: var(--color-bg-light);
+        padding: 1rem 1.5rem;
+        text-align: left;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .pricing-table tbody tr {
+        border-bottom: 1px solid var(--color-border);
+        transition: background-color 0.3s ease;
+    }
+    .pricing-table tbody tr:last-child {
+        border-bottom: none;
+    }
+    .pricing-table tbody tr:hover {
+        background-color: #fcfcff;
+    }
+    .pricing-table tbody td {
+        padding: 1.5rem;
+        vertical-align: middle;
+    }
+
+    /* Styling for specific columns */
+    .tld-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--color-text-dark);
+    }
+    .promo-badge {
+        background: var(--gradient-secondary);
+        color: white;
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        border-radius: 50px;
+        margin-left: 8px;
+        vertical-align: middle;
+        font-weight: 600;
+    }
+
+    .price-display { display: flex; flex-direction: column; }
+    .price-main {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+    .price-main.gradient-text {
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .price-promo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: var(--gradient-secondary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .price-original {
+        text-decoration: line-through;
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+    }
+    .price-secondary {
+        font-weight: 600;
+        color: var(--color-text-dark);
+    }
+    .action-cell { text-align: right; }
+
+    /* --- Revamped Pagination --- */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 3rem;
+    }
+    .pagination a, .pagination span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 10px;
+        border-radius: var(--border-radius-md);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .pagination a {
+        background-color: white;
+        border: 1px solid var(--color-border);
+        color: var(--color-text-muted);
+    }
+    .pagination a:hover {
+        border-color: var(--color-primary-start);
+        color: var(--color-primary-start);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    .pagination .active {
+        background: var(--gradient-primary);
+        color: white;
+        border: none;
+        box-shadow: 0 5px 15px rgba(142, 45, 226, 0.3);
+    }
+    .pagination .disabled {
+        color: #ccc;
+        background-color: var(--color-bg-light);
+        border: 1px solid var(--color-border);
+        pointer-events: none;
+    }
     
-    .price-normal { text-decoration: line-through; color: var(--nexus-text-gray); font-size: 0.9em; display: block; }
-    .price-promo { font-weight: bold; color: var(--nexus-danger); }
-    .promo-badge { background-color: var(--nexus-danger); color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; margin-left: 5px; vertical-align: middle; }
-    
-    .pagination { display: flex; justify-content: center; align-items: center; gap: 5px; margin-top: 2rem; }
-    .pagination a, .pagination span { display: inline-block; padding: 8px 14px; border-radius: var(--nexus-radius); text-decoration: none; }
-    .pagination a { background-color: white; border: 1px solid #ddd; }
-    .pagination a:hover { background-color: #f5f5f5; }
-    .pagination .active { background-color: var(--nexus-primary); color: white; border: 1px solid var(--nexus-primary); }
-    .pagination .disabled { color: #ccc; background-color: #f9f9f9; border: 1px solid #eee; pointer-events: none; }
+    /* --- Responsive Table to Cards --- */
+    @media (max-width: 992px) {
+        .pricing-table thead {
+            display: none; /* Hide table header on mobile */
+        }
+        .pricing-table, .pricing-table tbody, .pricing-table tr, .pricing-table td {
+            display: block;
+            width: 100%;
+        }
+        .pricing-table tr {
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+        .pricing-table td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--color-border);
+            text-align: right; /* Align value to the right */
+        }
+        .pricing-table td:last-child { border-bottom: none; }
+        .pricing-table td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--color-text-dark);
+            text-align: left; /* Align label to the left */
+            margin-right: 1rem;
+        }
+        .action-cell {
+            justify-content: center !important; /* Center the button */
+        }
+        .action-cell .btn { width: 100%; }
+        .action-cell::before { display: none; } /* Hide label for action button */
+        .tld-name { font-size: 1.3rem; }
+        .price-main, .price-promo { font-size: 1.3rem; }
+    }
 </style>
 
-<div class="container" style="padding-top: 2rem; padding-bottom: 2rem;">
-    <h1>Daftar Harga Domain</h1>
-    <p>Temukan harga terbaik untuk registrasi, perpanjangan, dan transfer nama domain Anda. Harga di bawah sudah termasuk promo dan penyesuaian dari kami.</p>
+<div class="container pricing-page-container">
+    <div class="pricing-header">
+        <h1>Daftar Harga Domain</h1>
+        <p>Temukan harga terbaik untuk registrasi, perpanjangan, dan transfer nama domain Anda. Harga di bawah sudah termasuk promo dan penyesuaian dari kami.</p>
+    </div>
     
-    <div class="card table-wrapper">
-        <table>
+    <div class="pricing-table-wrapper">
+        <table class="pricing-table">
             <thead>
                 <tr>
                     <th>Ekstensi Domain</th>
@@ -37,41 +217,58 @@
                 <% if (prices && prices.length > 0) { %>
                     <% prices.forEach(item => { %>
                         <tr>
-                            <td>
-                                <strong><%= item.domain_extension.extension %></strong>
-                                <% if (item.has_promo_or_override) { %>
-                                    <span class="promo-badge">PROMO</span>
-                                <% } %>
+                            <td data-label="Domain">
+                                <div>
+                                    <span class="tld-name"><%= item.domain_extension.extension %></span>
+                                    <% if (item.has_promo_or_override) { %>
+                                        <span class="promo-badge">PROMO</span>
+                                    <% } %>
+                                </div>
                             </td>
-                            <td>
-                                <% if (item.final_registration_price < parseInt(item.registration['1'])) { %>
-                                    <span class="price-promo">Rp <%= item.final_registration_price.toLocaleString('id-ID') %></span>
-                                    <span class="price-normal">Rp <%= parseInt(item.registration['1']).toLocaleString('id-ID') %></span>
-                                <% } else { %>
-                                    <strong>Rp <%= item.final_registration_price.toLocaleString('id-ID') %></strong>
-                                <% } %>
+                            <td data-label="Registrasi">
+                                <div class="price-display">
+                                    <% if (item.final_registration_price < parseInt(item.registration['1'])) { %>
+                                        <span class="price-promo">Rp <%= item.final_registration_price.toLocaleString('id-ID') %></span>
+                                        <span class="price-original">Rp <%= parseInt(item.registration['1']).toLocaleString('id-ID') %></span>
+                                    <% } else { %>
+                                        <strong class="price-main gradient-text">Rp <%= item.final_registration_price.toLocaleString('id-ID') %></strong>
+                                    <% } %>
+                                </div>
                             </td>
-                            <td><strong>Rp <%= parseInt(item.renewal['1']).toLocaleString('id-ID') %></strong></td>
-                            <td><strong>Rp <%= parseInt(item.transfer).toLocaleString('id-ID') %></strong></td>
-                            <td>
-                                <a href="/order-domain?domain=domainanda<%= item.domain_extension.extension %>&price=<%= item.final_registration_price %>" class="btn btn-sm btn-primary">Pesan</a>
+                            <td data-label="Perpanjangan">
+                                <strong class="price-secondary">Rp <%= parseInt(item.renewal['1']).toLocaleString('id-ID') %></strong>
+                            </td>
+                            <td data-label="Transfer">
+                                <strong class="price-secondary">Rp <%= parseInt(item.transfer).toLocaleString('id-ID') %></strong>
+                            </td>
+                            <td class="action-cell">
+                                <a href="/order-domain?domain=domainanda<%= item.domain_extension.extension %>&price=<%= item.final_registration_price %>" class="btn btn-sm btn-secondary">Pesan</a>
                             </td>
                         </tr>
                     <% }) %>
                 <% } else { %>
-                    <tr><td colspan="5" style="text-align: center; padding: 40px;">Gagal memuat daftar harga. Silakan coba lagi nanti.</td></tr>
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px;">
+                            Gagal memuat daftar harga. Silakan coba lagi nanti.
+                        </td>
+                    </tr>
                 <% } %>
             </tbody>
         </table>
     </div>
 
     <% if (pagination && pagination.last_page > 1) { %>
-        <nav class="pagination">
+        <nav class="pagination" aria-label="Page navigation">
             <%- pagination.links.map(link => {
-                if (!link.url) return `<span class="disabled">${link.label.replace('&laquo;', '«').replace('&raquo;', '»')}</span>`;
+                if (!link.url) {
+                    // Handle disabled Previous/Next links
+                    const label = link.label.includes('laquo') ? '&laquo;' : (link.label.includes('raquo') ? '&raquo;' : link.label);
+                    return `<span class="disabled">${label}</span>`;
+                }
                 const url = new URL(link.url);
                 const page = url.searchParams.get('page');
-                return `<a href="/domain-pricing?page=${page}" class="${link.active ? 'active' : ''}">${link.label.replace('&laquo;', '«').replace('&raquo;', '»')}</a>`;
+                const label = link.label.includes('laquo') ? '&laquo;' : (link.label.includes('raquo') ? '&raquo;' : link.label);
+                return `<a href="/domain-pricing?page=${page}" class="${link.active ? 'active' : ''}">${label}</a>`;
             }).join('') %>
         </nav>
     <% } %>
